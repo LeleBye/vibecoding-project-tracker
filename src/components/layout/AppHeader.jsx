@@ -5,7 +5,7 @@ export default function AppHeader({ onAddTask, projects, projectId, onProjectCha
     <header className="flex items-center justify-between gap-4 border-b-4 border-text-primary bg-text-primary px-8 py-[18px]">
       <div>
         <span className="font-heading text-[28px] tracking-[3px] text-surface-page">
-          LELE<span className="bg-brand-primary px-2 text-white">BYE</span>
+          VIBE<span className="bg-brand-primary px-2 text-white">TRACKER</span>
         </span>
         <p className="mt-[3px] font-body text-[13px] font-medium text-brand-accent">
           Vibecoding Project Tracker · The task tracker for vibecoders.
