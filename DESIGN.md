@@ -12,7 +12,7 @@
 
 One sentence that captures the feeling the tracker should leave you with.
 
-**I want it to push a design language that moves away from the recent "AI" styles by utilising bold colours, and an uncompromising focus on the content and tasks. The application is meant to maintain a sense of human control and creativity throughout agentic development.**
+**I want it to push a design language that moves away from the recent "AI" styles by utilising bold colours, thick borders, and an uncompromising focus on the content and tasks. The application is meant to maintain a sense of human control and creativity throughout agentic development.**
 
 Two or three references that capture the vibe (links to dribbble shots, screenshots of apps you admire, Pinterest boards — anything visual):
 
@@ -22,6 +22,9 @@ Two or three references that capture the vibe (links to dribbble shots, screensh
 
 Anti-references — what we are explicitly **not** trying to look like:
 
+- `Generic “AI assistant” dashboards`
+- `Glassmorphism, gradients, soft shadows, and excessive rounded pills`
+- `Interfaces that make automated activity feel more important than human decisions`
 - `https://scanaislop.com/blog/ai-slop-website-examples/`
 
 ## 2. Color palette
@@ -32,54 +35,56 @@ These are the colors the build milestones will reference. Once chosen, paste the
 
 | Token | Hex | Where it shows up |
 |---|---|---|
-| `brand-primary` | `<TODO>` | Header, "+" button, focus rings |
-| `brand-accent` | `<TODO>` | Highlights, hover states, links |
-| `surface-page` | `<TODO>` | Page background |
-| `surface-card` | `<TODO>` | Card background |
-| `text-primary` | `<TODO>` | Body text |
-| `text-muted` | `<TODO>` | Captions, dates, counts |
+| `brand-primary` | #FF5C7A | Header, "+" button, focus rings |
+| `brand-accent` | #36D6D0 | Highlights, hover states, links |
+| `surface-page` | #FFF8E8 | Page background |
+| `surface-card` | #FFFFFF | Card background |
+| `text-primary` | #171717 | Body text |
+| `text-muted` | #625D66 | Captions, dates, counts |
 
 ### Task type (M6 `tag-style`)
 
 | Token | Hex | When used |
 |---|---|---|
-| `type-feature` | `<TODO>` | Cards tagged `feature` (accent stripe + icon) |
-| `type-bug` | `<TODO>` | Cards tagged `bug` (accent stripe + icon) |
+| `type-feature` | #5B8CFF | Cards tagged `feature` (accent stripe + icon) |
+| `type-bug` | #FF5C5C | Cards tagged `bug` (accent stripe + icon) |
 
 ### Due-date states (M8 `due-tint`)
 
 | Token | Hex | When used |
 |---|---|---|
-| `due-safe` | `<TODO>` | More than 2 days out |
-| `due-warning` | `<TODO>` | Less than 24 hours |
-| `due-overdue` | `<TODO>` | Past due |
-| `due-neutral` | `<TODO>` | Done (overrides date) |
+| `due-safe` | #B9F5C5 | More than 2 days out |
+| `due-warning` | #FFD166 | Less than 24 hours |
+| `due-overdue` | #FF8A8A | Past due |
+| `due-neutral` | #D9D9D9 | Done (overrides date) |
+
+Use near-black (#171717) text and borders with all light status colours. Do not rely on the tint alone: always pair it with a label or icon.
 
 ## 3. Typography
 
 | Role | Font | Why |
 |---|---|---|
-| Heading | `<TODO>` | `<TODO one sentence>` |
-| Body | `<TODO>` | `<TODO one sentence>` |
-| Monospace (tags, badges, code) | `<TODO>` | `<TODO one sentence>` |
+| Heading | `Archivo Black` | `Dense, expressive, and forceful without looking corporate` |
+| Body | `Space Grotesk` | `Bold, "code aesthetic", and a staple of Neubrutalism.` |
+| Monospace (tags, badges, code) | `IBM Plex Mono` | `Legible for task tags, AI-tool labels, dates, and copied-context metadata` |
 
 Suggested sizes (override only if the design demands it):
 
-- Page title: 24 px / semibold
-- Section header: 16 px / semibold uppercase
-- Card title: 14 px / medium
+- Page title: 28 px / bold
+- Section header: 16 px / uppercase / bold
+- Card title: 15 px / semibold
 - Body: 14 px / regular
-- Caption: 12 px / regular muted
+- Caption: 12 px / medium
 
 ## 4. Component principles
 
 One short sentence per element. These set the tone for the build phase — Person A's modal and Person B's anchor board should both feel like they came from this doc.
 
-- **Cards:** `<TODO>` (e.g. "Light, almost weightless; the only weight is from a 1px border, no shadow except on hover.")
-- **Buttons:** `<TODO>` (e.g. "Solid fill, no gradient, generous padding, rounded-md.")
-- **Modal:** `<TODO>` (e.g. "Centered, max-width-md, slate-900 backdrop at 50% opacity.")
-- **Empty states:** `<TODO>` (e.g. "Dashed border, muted text, never sad.")
-- **Drag affordance (if used):** `<TODO>` (e.g. "None — we use a status dropdown.")
+- **Cards:** White surfaces with a 3 px near-black border, a sharp or lightly rounded corner, and a hard offset shadow. A card should feel like a physical note placed on the board.
+- **Buttons:** Solid-fill buttons with a 3 px near-black border and hard shadow. On press, move the button slightly down and right while reducing the shadow.
+- **Modal:** A white, high-contrast workspace panel with a thick black outline and strong separation from a dimmed backdrop. Prioritise readable forms over decoration.
+- **Empty states:** Direct and encouraging. Use a dashed black border, plain language, and one clear action.
+- **Drag affordance (if used):** None in the first version. Use the status dropdown so every state change remains deliberate and visible.
 
 ## 5. Voice / microcopy
 
@@ -87,20 +92,29 @@ Three lines of microcopy that capture the tone of the product. Keep it short —
 
 | Where | Text |
 |---|---|
-| "+" button label | `<TODO>` (e.g. "+ Task" or "Add task" or "New") |
-| Empty column placeholder | `<TODO>` (e.g. "Nothing here yet — keep going.") |
-| Toast after "Copy as Prompt Context" | `<TODO>` (e.g. "Copied. Now paste it into the AI.") |
-| Confirm-delete message | `<TODO>` (e.g. "Delete this task? You can't undo.") |
-| Handoff toast (M7 `task-owner`) | `<TODO>` (e.g. "Handed off to {name}. They've got it.") |
+| "+" button label | Add task |
+| Empty column placeholder | Nothing here! ...yet |
+| Toast after "Copy as Prompt Context" | Context copied. Hand it off to your AI tool. |
+| Confirm-delete message | Delete this task? This cannot be undone. |
+| Handoff toast | Task handed off to {name}. |
 
 ## 6. Logo / wordmark
 
 The tracker probably doesn't need a logo, but it does need a name and a wordmark style.
 
-- **Product name:** `<TODO>` (match PRD §11 team identity)
-- **Wordmark style:** `<TODO>` (e.g. "Just the name in the heading font, brand-primary color, no icon.")
+- **Product name:** LeleBye (match PRD §11 team identity)
+- **Wordmark style:** LELEBYE in Archivo Black, near-black, with a hot-coral highlight block or underline. Pair it with the subtitle “Vibecoding Project Tracker” in Space Grotesk.
 
-## 7. Out of scope (this hackathon)
+## 7. Interaction details
+
+- Use hard 4–6 px offset shadows rather than blurred shadows
+- Keep border widths consistent: 3 px for primary cards, buttons, inputs, and modals.
+- Use modest corner rounding only, around 2–6 px. Avoid pill-shaped controls.
+- Use motion sparingly. A 150–200 ms movement or fade is enough for button presses and toasts.
+- Keep ownership, task type, status, and due-date information obvious before a user opens a card.
+- Treat Copy as Prompt Context as a deliberate human action: the app prepares context, but the person chooses when and where to use it.
+
+## 8. Out of scope (this hackathon)
 
 To keep design tight, the following are explicitly not part of `design-done`:
 
