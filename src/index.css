@@ -7,8 +7,48 @@ html, body, #root {
 }
 
 body {
-  font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
-    'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-  background-color: #f8fafc; /* slate-50 */
-  color: #0f172a;            /* slate-900 */
+  margin: 0;
+}
+
+@layer components {
+  .neu-card {
+    @apply rounded border-[3px] border-text-primary bg-surface-card p-[14px] shadow-neu;
+  }
+
+  .neu-button {
+    @apply cursor-pointer rounded border-[3px] border-text-primary shadow-neu-sm active:translate-x-[2px] active:translate-y-[2px] active:shadow-none;
+  }
+
+  .neu-input {
+    @apply rounded border-[3px] border-text-primary bg-white px-3 py-2 font-body text-sm text-text-primary shadow-neu-sm focus:border-brand-primary focus:outline-none;
+  }
+
+  .neu-label {
+    @apply mb-1 block font-body text-[12px] font-bold uppercase tracking-wide text-text-primary;
+  }
+
+  .neu-icon-button {
+    @apply flex cursor-pointer items-center justify-center rounded active:translate-x-[1px] active:translate-y-[1px];
+  }
+}
+
+@keyframes toastIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@layer base {
+  *:focus-visible {
+    outline: 3px solid #FF5C7A;
+    outline-offset: 2px;
+  }
+
+  ::selection {
+    background: #FF5C7A;
+    color: #fff;
+  }
+
+  select {
+    appearance: auto;
+  }
 }
