@@ -71,6 +71,13 @@ function AnchorCard({ anchor, onChange }) {
           </span>
         )}
 
+        {!editing && (
+          <span
+            className={`ml-auto shrink-0 rounded-sm border-2 border-text-primary px-[5px] py-[1px] font-mono text-[10px] font-bold ${filled ? 'bg-black/10 text-text-primary' : 'bg-[#F0EDE5] text-text-muted'}`}
+          >
+            {filled ? '✓ LINKED' : '○ EMPTY'}
+          </span>
+        )}
       </div>
 
       {/* URL area */}
