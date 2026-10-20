@@ -5,19 +5,22 @@ import KanbanBoard from './components/board/KanbanBoard.jsx';
 import TaskModal from './components/tasks/TaskModal.jsx';
 import Toast from './components/feedback/Toast.jsx';
 import { STAGES } from './constants/taskConfig.js';
-import { SEED_ANCHORS, SEED_TASKS } from './data/seedData.js';
+import { PROJECTS } from './constants/projects.js';
 import { useLocalStorage } from './hooks/useLocalStorage.js';
+import { useProjectLocalStorage } from './hooks/useProjectLocalStorage.js';
 
 export default function App() {
-  const [tasks, setTasks] = useLocalStorage('vibetracker.tasks', null);
-  const [anchors, setAnchors] = useLocalStorage('vibetracker.anchors', SEED_ANCHORS);
+  const [projectId, setProjectId] = useLocalStorage('vibetracker.activeProject', 'vibecoding');
+  const project = PROJECTS.find((item) => item.id === projectId) || PROJECTS[0];
+  const [tasks, setTasks] = useProjectLocalStorage(project.id, 'vibetracker.tasks', project.initialTasks);
+  const [anchors, setAnchors] = useProjectLocalStorage(project.id, 'vibetracker.anchors', project.initialAnchors);
   const [modalTask, setModalTask] = useState(undefined);
   const [toast, setToast] = useState(null);
   const [draggingTaskId, setDraggingTaskId] = useState(null);
 
   useEffect(() => {
-    if (tasks === null) setTasks(SEED_TASKS);
-  }, [tasks, setTasks]);
+    if (tasks === null) setTasks(project.initialTasks);
+  }, [project.initialTasks, tasks, setTasks]);
 
   useEffect(() => {
     const clearDragState = () => setDraggingTaskId(null);
@@ -30,7 +33,7 @@ export default function App() {
   }, []);
 
   const safeTasks = Array.isArray(tasks) ? tasks : [];
-  const safeAnchors = Array.isArray(anchors) ? anchors : SEED_ANCHORS;
+  const safeAnchors = Array.isArray(anchors) ? anchors : project.initialAnchors;
 
   const showToast = useCallback((message, type = 'default') => {
     setToast({ message, type, key: Date.now() });
@@ -81,15 +84,24 @@ export default function App() {
 
   const handleAnchorChange = useCallback((id, url) => {
     setAnchors((previous) => (
-      (Array.isArray(previous) ? previous : SEED_ANCHORS).map((anchor) => (
+      (Array.isArray(previous) ? previous : project.initialAnchors).map((anchor) => (
         anchor.id === id ? { ...anchor, url } : anchor
       ))
     ));
-  }, [setAnchors]);
+  }, [project.initialAnchors, setAnchors]);
 
   return (
     <div className="min-h-screen bg-surface-page font-body text-text-primary">
-      <AppHeader onAddTask={() => setModalTask(null)} />
+      <AppHeader
+        onAddTask={() => setModalTask(null)}
+        projects={PROJECTS}
+        projectId={project.id}
+        onProjectChange={(nextProjectId) => {
+          setModalTask(undefined);
+          setDraggingTaskId(null);
+          setProjectId(nextProjectId);
+        }}
+      />
       <main className="mx-auto max-w-[1600px] px-8 py-7">
         <AnchorBoard anchors={safeAnchors} onAnchorChange={handleAnchorChange} />
         <KanbanBoard
