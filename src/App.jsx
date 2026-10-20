@@ -82,10 +82,10 @@ export default function App() {
     });
   }, [setTasks, showToast]);
 
-  const handleAnchorChange = useCallback((id, url) => {
+  const handleAnchorChange = useCallback((id, changes) => {
     setAnchors((previous) => (
       (Array.isArray(previous) ? previous : project.initialAnchors).map((anchor) => (
-        anchor.id === id ? { ...anchor, url } : anchor
+        anchor.id === id ? { ...anchor, ...changes } : anchor
       ))
     ));
   }, [project.initialAnchors, setAnchors]);

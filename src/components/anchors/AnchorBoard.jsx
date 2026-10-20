@@ -11,17 +11,28 @@ function AnchorCard({ anchor, onChange }) {
   const icon = ANCHOR_ICONS[anchor.id] || '□';
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(anchor.url || '');
+  const [titleDraft, setTitleDraft] = useState(anchor.label || '');
   const inputRef = useRef(null);
 
   useEffect(() => {
     if (editing && inputRef.current) inputRef.current.focus();
   }, [editing]);
 
-  // Keep draft in sync if parent url changes (e.g. on reload)
+  // Keep drafts in sync if parent data changes (e.g. after reload or project switch).
   useEffect(() => { setDraft(anchor.url || ''); }, [anchor.url]);
+  useEffect(() => { setTitleDraft(anchor.label || ''); }, [anchor.label]);
 
-  const save   = () => { onChange(draft.trim() || null); setEditing(false); };
-  const cancel = () => { setDraft(anchor.url || ''); setEditing(false); };
+  const save = () => {
+    const label = titleDraft.trim();
+    if (!label) return;
+    onChange({ label, url: draft.trim() || null });
+    setEditing(false);
+  };
+  const cancel = () => {
+    setTitleDraft(anchor.label || '');
+    setDraft(anchor.url || '');
+    setEditing(false);
+  };
 
   return (
     <div
@@ -31,7 +42,20 @@ function AnchorCard({ anchor, onChange }) {
       <div className="flex items-center gap-[6px] mb-[10px] min-w-0">
         <span aria-hidden="true" className="text-[15px] shrink-0">{icon}</span>
 
-        {filled ? (
+        {editing ? (
+          <input
+            ref={inputRef}
+            type="text"
+            value={titleDraft}
+            onChange={(e) => setTitleDraft(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') save();
+              if (e.key === 'Escape') cancel();
+            }}
+            aria-label={`Name for ${anchor.label}`}
+            className="neu-input min-w-0 flex-1 px-2 py-1 font-heading text-[12px]"
+          />
+        ) : filled ? (
           <a
             href={anchor.url}
             target="_blank"
@@ -47,18 +71,12 @@ function AnchorCard({ anchor, onChange }) {
           </span>
         )}
 
-        <span
-          className={`ml-auto shrink-0 rounded-sm border-2 border-text-primary px-[5px] py-[1px] font-mono text-[10px] font-bold ${filled ? 'bg-black/10 text-text-primary' : 'bg-[#F0EDE5] text-text-muted'}`}
-        >
-          {filled ? '✓ LINKED' : '○ EMPTY'}
-        </span>
       </div>
 
       {/* URL area */}
       {editing ? (
         <div className="flex gap-[5px] min-w-0">
           <input
-            ref={inputRef}
             type="url"
             value={draft}
             onChange={(e) => setDraft(e.target.value)}
@@ -67,8 +85,15 @@ function AnchorCard({ anchor, onChange }) {
             aria-label={`URL for ${anchor.label}`}
             className="neu-input flex-1 min-w-0 font-mono text-[11px]"
           />
-          <button onClick={save} className="neu-button shrink-0 font-mono text-[11px] font-bold px-[10px] py-[4px]">
+          <button
+            onClick={save}
+            disabled={!titleDraft.trim()}
+            className="neu-button shrink-0 px-[10px] py-[4px] font-mono text-[11px] font-bold disabled:cursor-not-allowed disabled:opacity-50"
+          >
             Save
+          </button>
+          <button onClick={cancel} className="neu-button shrink-0 bg-white px-[10px] py-[4px] font-mono text-[11px] font-bold">
+            Cancel
           </button>
         </div>
       ) : (
@@ -89,7 +114,11 @@ function AnchorCard({ anchor, onChange }) {
             </span>
           )}
           <button
-            onClick={() => { setDraft(anchor.url || ''); setEditing(true); }}
+            onClick={() => {
+              setDraft(anchor.url || '');
+              setTitleDraft(anchor.label || '');
+              setEditing(true);
+            }}
             aria-label={`${filled ? 'Edit' : 'Add'} URL for ${anchor.label}`}
             className="neu-button shrink-0 font-mono text-[10px] font-bold px-2 py-[3px]"
           >
@@ -116,7 +145,7 @@ export default function AnchorBoard({ anchors, onAnchorChange }) {
       </div>
       <div className="grid grid-cols-4 gap-3">
         {safeAnchors.map((a) => (
-          <AnchorCard key={a.id} anchor={a} onChange={(url) => onAnchorChange(a.id, url)} />
+          <AnchorCard key={a.id} anchor={a} onChange={(changes) => onAnchorChange(a.id, changes)} />
         ))}
       </div>
     </section>
