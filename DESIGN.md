@@ -12,17 +12,17 @@
 
 One sentence that captures the feeling the tracker should leave you with.
 
-`<TODO>`
+**I want it to push a design language that moves away from the recent "AI" styles by utilising bold colours, and an uncompromising focus on the content and tasks. The application is meant to maintain a sense of human control and creativity throughout agentic development.**
 
 Two or three references that capture the vibe (links to dribbble shots, screenshots of apps you admire, Pinterest boards — anything visual):
 
-- `<TODO>`
-- `<TODO>`
-- `<TODO>`
+- `https://www.onething.design/post/what-is-neo-brutalism-ui-design`
+- `https://neubrutalism.com/`
+- `https://dribbble.com/tags/neo-brutalism`
 
 Anti-references — what we are explicitly **not** trying to look like:
 
-- `<TODO>`
+- `https://scanaislop.com/blog/ai-slop-website-examples/`
 
 ## 2. Color palette
 
