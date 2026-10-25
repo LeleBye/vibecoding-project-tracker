@@ -1,8 +1,8 @@
 # AI Agent Context — Vibecoding Project Tracker
 
 **Last audited:** 25 October 2026  
-**Repository state at audit:** `main` working tree with multi-teammate management, handoff system, and project board creation/deletion with GitHub-style verification  
-**Verification completed:** `npm run build` passed (Vite production build). All 15 functional verification steps tested. There is no automated test or lint command.
+**Repository state at audit:** `main` working tree with multi-teammate management, handoff system, project board creation/deletion with GitHub-style verification, and responsive mobile/touch accessibility  
+**Verification completed:** `npm run build` passed (Vite production build). All functional verification steps tested. There is no automated test or lint command.
 
 
 Use this file as the working context for changes in this repository. It records the shipped application, the non-negotiable product boundaries, and the checks an agent must make before claiming work is complete.
@@ -50,19 +50,21 @@ Run `npm run build` after code changes. Do not add packages, replace the stack, 
 src/main.jsx                         React entry point; leave unchanged unless essential
 src/App.jsx                          App-level state, project switching, persistence wiring, toasts, DnD mutation
 src/constants/taskConfig.js          Locked stages, team, AI tools, form defaults, visual constants
-src/constants/projects.js            The three local workspaces and their initial data
+src/constants/projects.js            The local workspaces and their initial data
 src/data/seedData.js                 Vibecoding workspace demo tasks and deliverable anchors
 src/hooks/useLocalStorage.js         Generic JSON localStorage hook
 src/hooks/useProjectLocalStorage.js  Per-project persistence with legacy-key compatibility
 src/utils/taskUtils.js               IDs, dates, due state, time display, Markdown copy payload
 src/utils/clipboard.js               Clipboard API with legacy textarea fallback
-src/components/layout/AppHeader.jsx  Product header and Add Task control
-src/components/projects/             Project selector
-src/components/anchors/              Editable deliverable anchor board
-src/components/board/                Four-column board, columns, cards, optional HTML5 DnD
+src/utils/viewport.js                Viewport queries and desktop/mobile screen detection
+src/components/layout/AppHeader.jsx  Product header and responsive bottom action bar
+src/components/projects/             Projects modal, project creation, and deletion with GitHub-style verification
+src/components/team/                 Team roster modal with add, inline edit, and reassignment
+src/components/anchors/              Deliverable anchor board with mobile collapsible toggle
+src/components/board/                Kanban board (responsive tabs/grid), columns, cards, quick stage mover
 src/components/tasks/                Modal and display badges/pills
 src/components/feedback/Toast.jsx    Timed live-status toast
-src/index.css                        Tailwind layers and shared Neubrutalist primitives
+src/index.css                        Tailwind layers, .neu-* primitives, mobile sheet classes, touch form sizing
 ```
 
 Keep components focused. Pass state-changing callbacks down from `App`; do not introduce a global store for ordinary task interactions.
@@ -120,15 +122,16 @@ The visual language is deliberate **Neubrutalism**, not generic AI-dashboard sty
 - Due states: safe `#B9F5C5`, warning `#FFD166`, overdue `#FF8A8A`, and done-neutral `#D9D9D9`. Done overrides any due-date urgency. Missing dates are neutral/unbadged.
 - Fonts: Archivo Black for display, Space Grotesk for body, IBM Plex Mono for metadata. They are loaded in `index.html` and configured in Tailwind.
 
-Use Tailwind utilities and the existing `.neu-*` primitives rather than creating one-off CSS files. Keep controls semantic, labelled, keyboard reachable, visibly focused, and high contrast. Do not use gradients, glass effects, soft shadows, excessive pill controls, or vague autonomous-AI language.
+Use Tailwind utilities and the existing `.neu-*` primitives rather than creating one-off CSS files. Keep controls semantic, labelled, keyboard reachable, visibly focused, and high contrast. Do not use gradients, glass effects, soft shadows, excessive pill controls, or vague autonomous-AI language. On touch devices, Tailwind is configured with `hoverOnlyWhenSupported: true` to prevent sticky hover states. Mobile form inputs are locked to 16px to prevent automatic iOS Safari viewport zooming. Safe area insets (`env(safe-area-inset-*)`) ensure full compatibility with modern mobile hardware.
 
 ## 7. Current shipped behavior
 
-- **Header/workspaces:** The header presents the product identity and three consolidated modal action buttons: "Project" (displays the active board name and opens the unified project management modal to switch, create, and delete boards), "Team" (displays member count and opens the team roster modal), and "Add task" (opens the task creation modal). Switching projects switches locally persisted tasks and anchors.
+- **Header/workspaces:** On tablet and desktop (`md:`), the header presents the product identity and three consolidated modal action buttons: "Project" (displays the active board name and opens the unified project management modal to switch, create, and delete boards), "Team" (displays member count and opens the team roster modal), and "Add task" (opens the task creation modal). On mobile viewports (< md), the header is a compact sticky brand bar, and primary actions ("Projects", "+ Add task", "Team") are anchored in a thumb-reachable fixed bottom navigation bar. Switching projects switches locally persisted tasks and anchors.
 - **Project board management:** Allows creating new project boards with custom name, description, and auto-initialized 4-stage Kanban workflow and 4 anchor slots. Deleting project boards features thorough GitHub-style verification requiring the user to type the exact board name to enable the irreversible deletion action. When the active project is deleted, the app automatically transitions to another remaining board. Deletion is prevented when only one board remains.
 - **Team management:** The team modal allows adding members with Name and Email, inline editing member details (automatically synchronizing assignees across existing tasks upon name change), and removing members with two-step double-click confirmation ("✕ Delete" → "! Confirm Delete"). Removing a team member automatically reassigns their tasks across all projects to the "Unassigned" state.
-- **Anchor Board:** Four cards sit above the board. Each shows an empty/linked state, supports inline label/URL editing, saves on Enter or Save, cancels on Escape, and opens saved links in a new tab.
-- **Kanban:** The main workspace always renders the four locked columns. Cards open the task modal by click or Enter/Space. Unassigned tasks display a dedicated Neubrutalist dashed-border avatar icon in place of member initials. HTML5 drag-and-drop moves and reorders cards (column drop target styling and "+ Drop to place at end of column" indicators cleanly reset upon card drop or drag end); the task status select remains available.
+- **Anchor Board:** Four cards sit above the board. Each shows an empty/linked state, supports inline label/URL editing, saves on Enter or Save, cancels on Escape, and opens saved links in a new tab. On mobile devices, anchors collapse by default behind an interactive summary toggle (`x/4 linked ▾`) to save vertical space, expanding into a 2-column grid when toggled.
+- **Kanban:** The desktop workspace renders the four locked columns across the row; tablet viewports adapt to a 2×2 grid. On mobile phones, a sticky 4-stage switcher tab bar shows one column at a time with badge counters. Swiping horizontally anywhere on the board area navigates between stages (`touch-pan-y` ensures native vertical scrolling is never blocked, and a swipe-click guard prevents unintended card modal opens). On mobile, outer column container borders and internal horizontal padding are removed so cards cleanly expand to fill the available screen width. Cards open the task modal by click or Enter/Space. Unassigned tasks display a dedicated Neubrutalist dashed-border avatar icon in place of member initials. HTML5 drag-and-drop moves and reorders cards on desktop; touch devices utilize an inline, accessible "Move" stage select on each card or the status select within the modal.
+- **Modals & Sheet Pattern:** All modals (Task, Team, Projects, Delete Project) use a responsive sheet pattern (`.neu-sheet`, `.neu-sheet-header`, `.neu-sheet-body`, `.neu-sheet-footer`) that appears as a centered dialog on desktop/tablet and smoothly transitions to a full-screen sheet with pinned headers and footers on mobile. On mobile, autofocusing on edit modals is skipped to avoid popping the virtual keyboard over existing content.
 - **Task modal:** One modal creates, edits, deletes (two-step confirmation), changes status/type/assignee/due date, exposes the handoff/unassign control for existing tasks with live confirmation toast upon reassignment save, and closes by Cancel, close button, backdrop, or Escape. New tasks default to "Unassigned". Title is the only required field.
 - **Context:** New tasks start with the fixed Background / Constraints / Tried so far / Pick up from here Markdown template. Context timestamps update only when the context itself changes; the selected AI tool is stored separately. Context is human-written, never generated or sent by the app.
 - **Copy:** A card and modal action copy a Markdown task briefing with task metadata, title, description, and full Context. Successful copy shows local button feedback and a toast; failed clipboard writes show an error toast.

@@ -79,7 +79,7 @@ export default function KanbanColumn({
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
         onDrop={handleDrop}
-        className={`flex min-h-[160px] flex-1 flex-col gap-[10px] p-3 transition-colors duration-[120ms] md:min-h-[220px] ${isColumnDragOver ? 'bg-[#F7F2E7] outline outline-3 outline-dashed outline-offset-[-4px] outline-text-primary' : 'bg-surface-page'}`}
+        className={`flex min-h-[160px] flex-1 flex-col gap-[10px] px-0 py-1 transition-colors duration-[120ms] md:min-h-[220px] md:p-3 ${isColumnDragOver ? 'bg-[#F7F2E7] outline outline-3 outline-dashed outline-offset-[-4px] outline-text-primary' : 'bg-surface-page'}`}
       >
         {tasks.length === 0 ? (
           <div

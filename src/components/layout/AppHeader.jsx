@@ -26,18 +26,6 @@ export default function AppHeader({
           </p>
         </div>
 
-        {/* Phone: active board chip (opens the project modal) */}
-        <button
-          id="mobile-project-chip"
-          type="button"
-          onClick={onOpenProjects}
-          aria-label={`Active project: ${projectName}. Manage project boards`}
-          className="flex min-h-[40px] min-w-0 items-center gap-1.5 rounded border-2 border-surface-page bg-brand-accent px-2.5 py-1 font-mono text-[12px] font-bold text-text-primary shadow-[2px_2px_0_0_#FFF8E8] active:translate-x-px active:translate-y-px active:shadow-none md:hidden"
-        >
-          <span aria-hidden="true" className="leading-none">⊞</span>
-          <span className="max-w-[40vw] truncate">{projectName}</span>
-          <span aria-hidden="true" className="leading-none">▾</span>
-        </button>
 
         {/* Tablet / desktop actions */}
         <div className="hidden shrink-0 items-center gap-3 md:flex">

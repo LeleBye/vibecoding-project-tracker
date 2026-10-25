@@ -17,15 +17,16 @@ const STAGE_TAB_SWATCH = {
   done: 'bg-brand-accent',
 };
 
-const SWIPE_MIN_DISTANCE = 60;
+const SWIPE_MIN_DISTANCE = 40;
 
 /**
  * Kanban board — renders the label row and the four-column grid.
  * All drag state and task mutation callbacks are passed down from App.
  *
  * Phones (< md): all four columns stay rendered in the locked order, but only
- * the stage chosen in the sticky tab bar is visible. Swiping left/right on the
- * column switches to the neighbouring stage.
+ * the stage chosen in the sticky tab bar is visible. Swiping left/right anywhere
+ * on the board area switches to the neighbouring stage.
+ * Column borders are removed on mobile so cards take up full width.
  * Tablets (md): 2 × 2 grid. Desktop (lg+): the original four-column row.
  */
 export default function KanbanBoard({
@@ -41,6 +42,7 @@ export default function KanbanBoard({
   const tabBarRef = useRef(null);
   const columnsRef = useRef(null);
   const touchStartRef = useRef(null);
+  const lastSwipeTimeRef = useRef(0);
 
   const selectStage = (stageId) => {
     setActiveStage(stageId);
@@ -57,25 +59,47 @@ export default function KanbanBoard({
 
   const handleTouchStart = (e) => {
     if (e.touches.length !== 1) return;
-    touchStartRef.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+    touchStartRef.current = {
+      x: e.touches[0].clientX,
+      y: e.touches[0].clientY,
+      target: e.target,
+    };
   };
 
   const handleTouchEnd = (e) => {
     const start = touchStartRef.current;
     touchStartRef.current = null;
     if (!start || e.changedTouches.length === 0) return;
-    // Ignore swipes that start on form controls (e.g. the card Move select).
-    if (e.target.closest?.('select, input, textarea')) return;
+    // Ignore swipes that start on interactive controls (e.g. the card Move select).
+    if (start.target?.closest?.('select, input, textarea')) return;
     const dx = e.changedTouches[0].clientX - start.x;
     const dy = e.changedTouches[0].clientY - start.y;
-    if (Math.abs(dx) < SWIPE_MIN_DISTANCE || Math.abs(dx) < Math.abs(dy) * 1.5) return;
+    if (Math.abs(dx) < SWIPE_MIN_DISTANCE || Math.abs(dx) < Math.abs(dy) * 1.2) return;
     const index = STAGES.findIndex((s) => s.id === activeStage);
     const nextIndex = dx < 0 ? index + 1 : index - 1;
-    if (nextIndex >= 0 && nextIndex < STAGES.length) selectStage(STAGES[nextIndex].id);
+    if (nextIndex >= 0 && nextIndex < STAGES.length) {
+      lastSwipeTimeRef.current = Date.now();
+      selectStage(STAGES[nextIndex].id);
+    }
+  };
+
+  const handleTouchCancel = () => {
+    touchStartRef.current = null;
+  };
+
+  const handleCardClick = (task) => {
+    // If a horizontal swipe just completed, prevent opening the card modal
+    if (Date.now() - lastSwipeTimeRef.current < 300) return;
+    onCardClick(task);
   };
 
   return (
-    <div>
+    <div
+      onTouchStart={handleTouchStart}
+      onTouchEnd={handleTouchEnd}
+      onTouchCancel={handleTouchCancel}
+      className="touch-pan-y"
+    >
       {/* Board label row */}
       <div className="flex items-center gap-[10px] mb-[14px]">
         <h2 className="font-heading text-[13px] tracking-[1px] uppercase text-text-primary m-0">
@@ -132,29 +156,28 @@ export default function KanbanBoard({
           })}
         </div>
         <p aria-hidden="true" className="mt-2 text-center font-mono text-[10px] text-text-muted">
-          ← Swipe the column to change stage →
+          ← Swipe anywhere on the board to change stage →
         </p>
       </div>
 
-      {/* Column grid: 1 visible column on phones, 2×2 on tablets, 4 across on desktop */}
+      {/* Column grid: 1 visible column on phones, 2×2 on tablets, 4 across on desktop.
+          On phones, column container borders and shadows are removed so cards fill the available width. */}
       <div
         ref={columnsRef}
-        onTouchStart={handleTouchStart}
-        onTouchEnd={handleTouchEnd}
         className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-[repeat(4,minmax(220px,1fr))]"
       >
         {STAGES.map((stage) => (
           <div
             key={stage.id}
             id={`stage-panel-${stage.id}`}
-            className={`border-[3px] border-text-primary shadow-neu rounded overflow-hidden flex-col ${
+            className={`flex-col md:border-[3px] md:border-text-primary md:shadow-neu md:rounded md:overflow-hidden ${
               stage.id === activeStage ? 'flex' : 'hidden md:flex'
             }`}
           >
             <KanbanColumn
               stage={stage}
               tasks={tasks.filter((t) => t.status === stage.id)}
-              onCardClick={onCardClick}
+              onCardClick={handleCardClick}
               onCopy={onCopy}
               onMoveTask={onMoveTask}
               draggingTaskId={draggingTaskId}
