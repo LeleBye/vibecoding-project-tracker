@@ -1,4 +1,4 @@
-import { DUE_STATE_CFG } from '../constants/taskConfig.js';
+import { DUE_STATE_CFG, STAGES } from '../constants/taskConfig.js';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // ID & date helpers
@@ -49,7 +49,7 @@ export function timeAgo(iso) {
   if (!iso) return null;
   const diffMs = Date.now() - new Date(iso).getTime();
   const mins = Math.floor(diffMs / 60_000);
-  if (mins < 2)  return 'just now';
+  if (mins < 2) return 'just now';
   if (mins < 60) return `${mins}m ago`;
   const hours = Math.floor(mins / 60);
   if (hours < 24) return `${hours}h ago`;
@@ -85,5 +85,24 @@ export function fmtDate(dateStr) {
  * @returns {string}
  */
 export function buildPromptContext(task) {
-  return `# Task: ${task.title}\n\n## Description\n${task.description || '(no description)'}\n\n## Context\n${task.context || '(no context provided)'}`;
+  const statusLabel = STAGES.find((stage) => stage.id === task.status)?.label || task.status || 'Not set';
+  const dueDate = task.dueDate || 'Not set';
+  const contextTool = task.contextTool || 'Not specified';
+  const createdDate = task.createdDate || 'Not set';
+
+  return `# Task: ${task.title}
+
+## Details
+- Type: ${task.type || 'Not set'}
+- Status: ${statusLabel}
+- Assignee: ${task.assignee || 'Unassigned'}
+- Due date: ${dueDate}
+- Created: ${createdDate}
+- AI tool: ${contextTool}
+
+## Description
+${task.description || '(no description)'}
+
+## Context
+${task.context || '(no context provided)'}`;
 }

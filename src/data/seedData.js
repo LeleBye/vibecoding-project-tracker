@@ -37,7 +37,7 @@ export const SEED_TASKS = [
       'Implement a single reusable modal that handles task creation, editing, and deletion with full form validation.',
     type: 'feature',
     status: 'done',
-    assignee: 'Benjamin Rosser',
+    assignee: 'Sarah Chen',
     dueDate: relativeDate(-1),
     createdDate: relativeDate(-4),
     context:
@@ -52,7 +52,7 @@ export const SEED_TASKS = [
       'Calculate urgency from dueDate and apply the correct DESIGN.md colour token to each task card.',
     type: 'feature',
     status: 'review',
-    assignee: 'Benjamin Rosser',
+    assignee: 'Alex Rivera',
     dueDate: relativeDate(0), // due today → warning
     createdDate: relativeDate(-2),
     context:
@@ -82,7 +82,7 @@ export const SEED_TASKS = [
       'One-click copy of a formatted Markdown briefing to the clipboard so a user can paste it directly into an AI chat.',
     type: 'feature',
     status: 'todo',
-    assignee: 'Benjamin Rosser',
+    assignee: 'Sarah Chen',
     dueDate: relativeDate(-2), // overdue!
     createdDate: relativeDate(-3),
     context: CONTEXT_TEMPLATE,
@@ -96,7 +96,7 @@ export const SEED_TASKS = [
       'Pasting a URL without https:// prefix saves successfully but the generated anchor link is broken.',
     type: 'bug',
     status: 'todo',
-    assignee: 'Benjamin Rosser',
+    assignee: 'Alex Rivera',
     dueDate: relativeDate(4), // safe — more than 2 days
     createdDate: relativeDate(-1),
     context: CONTEXT_TEMPLATE,

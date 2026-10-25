@@ -38,11 +38,13 @@ export default function TaskCard({
   const handleCopy = useCallback(
     (e) => {
       e.stopPropagation();
-      copyToClipboard(buildPromptContext(task)).then(() => {
-        onCopy(task);
-        setCopied(true);
-        setTimeout(() => setCopied(false), 1800);
-      });
+      copyToClipboard(buildPromptContext(task))
+        .then(() => {
+          onCopy(task);
+          setCopied(true);
+          setTimeout(() => setCopied(false), 1800);
+        })
+        .catch(() => onCopy(task, 'error'));
     },
     [task, onCopy]
   );
@@ -68,6 +70,9 @@ export default function TaskCard({
           e.stopPropagation();
           e.dataTransfer.dropEffect = 'move';
           if (!isOverCard) setIsOverCard(true);
+        } else if (draggingTaskId === task.id) {
+          e.preventDefault();
+          e.stopPropagation();
         }
       }}
       onDragLeave={(e) => {
@@ -83,6 +88,11 @@ export default function TaskCard({
           const droppedId = draggingTaskId;
           onDragEnd?.();
           onMoveTask?.(droppedId, task.status, task.id);
+        } else if (draggingTaskId === task.id) {
+          e.preventDefault();
+          e.stopPropagation();
+          setIsOverCard(false);
+          onDragEnd?.();
         }
       }}
       onClick={() => {
@@ -127,6 +137,7 @@ export default function TaskCard({
         <button
           onClick={handleCopy}
           onMouseDown={(e) => e.stopPropagation()}
+          onKeyDown={(e) => e.stopPropagation()}
           aria-label="Copy as Prompt Context"
           className={`font-mono text-[11px] font-bold rounded-sm border-2 border-text-primary px-[10px] py-[4px] cursor-pointer transition-colors duration-150 ${copied ? 'bg-brand-accent text-text-primary shadow-none' : 'bg-text-primary text-surface-page shadow-neu-sm'}`}
         >

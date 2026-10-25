@@ -2,6 +2,14 @@ import { useState, useRef, useEffect } from 'react';
 import { ANCHOR_ICONS } from '../../constants/taskConfig.js';
 import { SEED_ANCHORS } from '../../data/seedData.js';
 
+function normalizeAnchorUrl(value) {
+  const url = value.trim();
+  if (!url) return null;
+  if (url.startsWith('//')) return `https:${url}`;
+  if (/^[a-z][a-z\d+.-]*:/i.test(url)) return url;
+  return `https://${url}`;
+}
+
 /**
  * Editable card for a single deliverable anchor (M11).
  * Clicking "Add" / "Edit" enters inline edit mode; Enter saves, Escape cancels.
@@ -25,7 +33,7 @@ function AnchorCard({ anchor, onChange }) {
   const save = () => {
     const label = titleDraft.trim();
     if (!label) return;
-    onChange({ label, url: draft.trim() || null });
+    onChange({ label, url: normalizeAnchorUrl(draft) });
     setEditing(false);
   };
   const cancel = () => {

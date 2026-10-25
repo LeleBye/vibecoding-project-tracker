@@ -140,7 +140,7 @@ Fill in:
 
 - **Team name:** `LeleBye`
 - **Tagline (one sentence):** `The task tracker for vibecoders.`
-- **Tracker URL after deploy:** `<TODO>` (Vercel will give it to you)
+- **Tracker URL after deploy:** `https://vibecoding-project-tracker.onrender.com/`
 
 ## 12. Out of scope (do not build)
 

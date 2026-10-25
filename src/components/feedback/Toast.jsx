@@ -14,6 +14,7 @@ export default function Toast({ message, type, onDismiss }) {
     default: 'bg-text-primary text-surface-page',
     success: 'bg-brand-accent text-text-primary',
     handoff: 'bg-brand-primary text-white',
+    error: 'bg-type-bug text-white',
   }[type] || 'bg-text-primary text-surface-page';
 
   return (

@@ -1,0 +1,175 @@
+# AI Agent Context — Vibecoding Project Tracker
+
+**Last audited:** 25 October 2026  
+**Repository state at audit:** `main` working tree with multi-teammate management and handoff system (FR07, FR08)  
+**Verification completed:** `npm run build` passed (Vite production build). There is no automated test or lint command.
+
+Use this file as the working context for changes in this repository. It records the shipped application, the non-negotiable product boundaries, and the checks an agent must make before claiming work is complete.
+
+## 1. Read this first: authority and working rules
+
+Apply requirements in this order:
+
+1. The current user's explicit request.
+2. This file, for repository-wide guardrails and the audited current state.
+3. `PRD.md`, for product scope, the locked task model, and required Kanban workflow.
+4. `DESIGN.md`, for the completed visual system and interaction tone.
+5. Existing source, for established implementation patterns and backwards compatibility.
+
+The README, PRD, and DESIGN documents began as hackathon materials. Their remaining starter-status wording and TODO reminders are historical; do not interpret them as an instruction to rewrite completed work. In particular, do not modify `PRD.md` or `DESIGN.md`, create commits/tags, push, deploy, or change saved browser data unless the user explicitly asks.
+
+If a request conflicts with a locked constraint below, explain the conflict and ask before widening scope. Preserve unrelated user changes in a dirty working tree.
+
+## 2. Product in one paragraph
+
+This is a desktop-first, single-page tracker for a small vibecoding team. Its purpose is to keep human ownership of priorities, assignments, deadlines, deliverables, and curated task context visible while allowing a person to deliberately copy a briefing into an external AI tool. It is **not** an AI agent, a shared collaboration system, or an integration hub.
+
+The shipped UI also includes a small project switcher with three local project workspaces. This is an existing extension to the original single-project brief; preserve it unless the user requests a change.
+
+## 3. Stack and commands
+
+- React 18 + Vite 5, JavaScript/JSX with ESM modules.
+- Tailwind CSS 3 and the shared utility classes in `src/index.css`.
+- Browser `localStorage` only. There is no API, backend, authentication, database, routing library, state library, icon package, or test framework.
+- Node package manager lockfile: `package-lock.json`.
+
+Useful commands:
+
+```bash
+npm run dev
+npm run build
+npm run preview
+```
+
+Run `npm run build` after code changes. Do not add packages, replace the stack, or edit the lockfile unless the user has specifically authorized that scope.
+
+## 4. Source map
+
+```text
+src/main.jsx                         React entry point; leave unchanged unless essential
+src/App.jsx                          App-level state, project switching, persistence wiring, toasts, DnD mutation
+src/constants/taskConfig.js          Locked stages, team, AI tools, form defaults, visual constants
+src/constants/projects.js            The three local workspaces and their initial data
+src/data/seedData.js                 Vibecoding workspace demo tasks and deliverable anchors
+src/hooks/useLocalStorage.js         Generic JSON localStorage hook
+src/hooks/useProjectLocalStorage.js  Per-project persistence with legacy-key compatibility
+src/utils/taskUtils.js               IDs, dates, due state, time display, Markdown copy payload
+src/utils/clipboard.js               Clipboard API with legacy textarea fallback
+src/components/layout/AppHeader.jsx  Product header and Add Task control
+src/components/projects/             Project selector
+src/components/anchors/              Editable deliverable anchor board
+src/components/board/                Four-column board, columns, cards, optional HTML5 DnD
+src/components/tasks/                Modal and display badges/pills
+src/components/feedback/Toast.jsx    Timed live-status toast
+src/index.css                        Tailwind layers and shared Neubrutalist primitives
+```
+
+Keep components focused. Pass state-changing callbacks down from `App`; do not introduce a global store for ordinary task interactions.
+
+## 5. Locked product contract
+
+### Workflow
+
+Keep exactly these stage IDs, labels, and order from `src/constants/taskConfig.js`:
+
+| ID | UI label |
+| --- | --- |
+| `todo` | To Do |
+| `in-progress` | In Progress |
+| `review` | Review |
+| `done` | Done |
+
+Do not add, rename, reorder, or remove columns. The modal status select is the required accessible movement path. Existing drag-and-drop is optional progressive enhancement, not a substitute for that select.
+
+### Task and anchor data
+
+Preserve this task shape and field meanings. Existing saved data must remain readable.
+
+```js
+{
+  id: string,
+  title: string,
+  description: string,
+  type: 'feature' | 'bug',
+  status: 'todo' | 'in-progress' | 'review' | 'done',
+  assignee: string,             // use TEAM values only
+  dueDate: string | null,       // YYYY-MM-DD
+  createdDate: string,          // YYYY-MM-DD
+  context: string,              // human-curated Markdown briefing
+  contextTool: 'Claude' | 'ChatGPT' | 'Cursor' | 'Lovable' | 'Replit' | 'Other' | null,
+  contextUpdatedAt: string | null // ISO timestamp
+}
+```
+
+Anchors are `{ id, label, url }` with the four fixed IDs: `presentation`, `demo`, `report`, and `documentation`. The current UI lets a person edit labels as well as URLs; keep the IDs stable.
+
+Team roster is persisted under `vibetracker.team` with Name and Email per member; assignees reference roster member names. Initial roster provides Benjamin Rosser, Sarah Chen, and Alex Rivera for demonstration.
+
+### Explicitly out of scope
+
+Do not add authentication, accounts, a backend/database, shared or real-time state, GitHub/webhook integration, AI-tool integrations, multi-team support, extra workflow columns, or a separate task outcome field. Do not present the app as autonomously making task decisions.
+
+## 6. Design system and accessibility baseline
+
+The visual language is deliberate **Neubrutalism**, not generic AI-dashboard styling:
+
+- Cream page background; white cards; near-black 3px borders; 2–6px corners; hard 2–6px offset shadows.
+- Coral `#FF5C7A` is primary, teal `#36D6D0` is accent, and near-black `#171717` is body text/border.
+- Feature is blue `#5B8CFF`; bug is red `#FF5C5C` and both must use a text/icon label as well as colour.
+- Due states: safe `#B9F5C5`, warning `#FFD166`, overdue `#FF8A8A`, and done-neutral `#D9D9D9`. Done overrides any due-date urgency. Missing dates are neutral/unbadged.
+- Fonts: Archivo Black for display, Space Grotesk for body, IBM Plex Mono for metadata. They are loaded in `index.html` and configured in Tailwind.
+
+Use Tailwind utilities and the existing `.neu-*` primitives rather than creating one-off CSS files. Keep controls semantic, labelled, keyboard reachable, visibly focused, and high contrast. Do not use gradients, glass effects, soft shadows, excessive pill controls, or vague autonomous-AI language.
+
+## 7. Current shipped behavior
+
+- **Header/workspaces:** The header presents the product identity, an Add Task action, a Team management modal trigger showing member count, and a selector for `vibecoding`, `mobile-app`, and `website-refresh`. Switching projects also switches locally persisted tasks and anchors.
+- **Team management:** The team modal allows adding members with Name and Email, inline editing member details (automatically synchronizing assignees across existing tasks upon name change), and removing members with two-step double-click confirmation ("✕ Delete" → "⚠ Confirm Delete").
+- **Anchor Board:** Four cards sit above the board. Each shows an empty/linked state, supports inline label/URL editing, saves on Enter or Save, cancels on Escape, and opens saved links in a new tab.
+- **Kanban:** The main workspace always renders the four locked columns. Cards open the task modal by click or Enter/Space. HTML5 drag-and-drop moves and reorders cards (column drop target styling and "+ Drop to place at end of column" indicators cleanly reset upon card drop or drag end); the task status select remains available.
+- **Task modal:** One modal creates, edits, deletes (two-step confirmation), changes status/type/assignee/due date, exposes the handoff control for existing tasks with live confirmation toast upon reassignment save, and closes by Cancel, close button, backdrop, or Escape. Title is the only required field.
+- **Context:** New tasks start with the fixed Background / Constraints / Tried so far / Pick up from here Markdown template. Context timestamps update only when the context itself changes; the selected AI tool is stored separately. Context is human-written, never generated or sent by the app.
+- **Copy:** A card and modal action copy a Markdown task briefing with task metadata, title, description, and full Context. Successful copy shows local button feedback and a toast; failed clipboard writes show an error toast.
+- **Urgency:** `getDueState()` treats completed tasks as neutral first; undated tasks have no urgency badge; past dates are overdue; less than 24 hours is warning; remaining future dates are safe.
+- **Demo content:** The vibecoding workspace seeds six varied tasks only when no saved data exists, covering both types, every useful urgency state, multiple workflow columns, contextual Markdown, and one filled anchor. The two supplemental workspaces each seed one task and four anchors.
+
+## 8. Persistence compatibility
+
+Never clear or rename these keys casually:
+
+| Data | Key |
+| --- | --- |
+| Active project | `vibetracker.activeProject` |
+| Team roster | `vibetracker.team` |
+| Vibecoding tasks (legacy-compatible) | `vibetracker.tasks` |
+| Vibecoding anchors (legacy-compatible) | `vibetracker.anchors` |
+| Other project tasks | `vibetracker.project.<projectId>.tasks` |
+| Other project anchors | `vibetracker.project.<projectId>.anchors` |
+
+The hooks tolerate unreadable JSON by falling back to their supplied initial value. `App` also protects rendering from non-array task/anchor values. Preserve these safety characteristics when touching persistence.
+
+## 9. Known limitations and follow-up candidates
+
+These are observations from the audit, not authorization to expand scope. Fix one only when it is relevant to the user's request.
+
+1. There are no automated tests, linter, CI configuration, or deployment configuration in this repository. Build success is the available baseline verification.
+2. Clipboard fallback success depends on browser support for `document.execCommand('copy')`; unsupported or denied writes show an error toast.
+3. Anchor URLs are normalized to absolute URLs on save. The app does not validate whether the destination is reachable.
+5. `COL_ACCENTS` and `getDueCfg`/`DUE_STATE_CFG` exist as configuration helpers but are currently not consumed by the rendered column/card components. Do not assume changing them updates the UI without tracing the callers.
+6. The PRD's deployment URL remains `<TODO>`, and the local clone has no Git tags even though the commit history contains a `pitch-done` commit. Do not create tags, deploy, or infer a public URL without explicit instruction. The historical milestone wording also differs: README says `project-deliverables`; the PRD ownership table says `anchors`.
+
+## 10. Agent change checklist
+
+Before editing:
+
+1. Read the relevant component plus its caller, constants, utility, and persistence hook.
+2. Confirm whether saved local data and the locked task/anchor schemas are affected.
+3. Keep the change narrowly scoped; preserve the existing multi-project behavior unless asked otherwise.
+
+Before reporting completion:
+
+1. Run `npm run build`.
+2. Exercise every changed user path, including a reload/persistence check when tasks, anchors, projects, or forms changed.
+3. Check keyboard access, focus, labels, feedback, and non-colour indicators for any changed UI.
+4. Confirm no backend, integration, package, schema, or milestone/Git action slipped in unintentionally.
+5. Update this file's audit date and affected “Current shipped behavior” or “Known limitations” entry whenever architecture, requirements, persistence, or verified project state changes. Keep claims factual and verification-backed.

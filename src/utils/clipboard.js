@@ -4,13 +4,26 @@
  */
 export async function copyToClipboard(text) {
   if (navigator.clipboard) {
-    await navigator.clipboard.writeText(text);
-  } else {
-    const ta = document.createElement('textarea');
+    try {
+      await navigator.clipboard.writeText(text);
+      return;
+    } catch {
+      // Some browsers expose the API but reject writes because of permissions.
+    }
+  }
+
+  const ta = document.createElement('textarea');
+  try {
     ta.value = text;
+    ta.setAttribute('readonly', '');
+    ta.style.position = 'fixed';
+    ta.style.opacity = '0';
     document.body.appendChild(ta);
     ta.select();
-    document.execCommand('copy');
-    document.body.removeChild(ta);
+    if (!document.execCommand('copy')) {
+      throw new Error('Clipboard copy was rejected.');
+    }
+  } finally {
+    ta.remove();
   }
 }

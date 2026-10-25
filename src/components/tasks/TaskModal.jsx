@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import AssigneeBadge from '../tasks/AssigneeBadge.jsx';
-import { STAGES, TEAM, AI_TOOLS, CONTEXT_TEMPLATE, EMPTY_FORM } from '../../constants/taskConfig.js';
+import { STAGES, TEAM, DEFAULT_TEAM, AI_TOOLS, CONTEXT_TEMPLATE, EMPTY_FORM } from '../../constants/taskConfig.js';
 import { uid, todayStr, timeAgo, buildPromptContext } from '../../utils/taskUtils.js';
 import { copyToClipboard } from '../../utils/clipboard.js';
 
@@ -10,18 +10,20 @@ import { copyToClipboard } from '../../utils/clipboard.js';
  * task === null  →  "new task" mode
  * task === {...} →  "edit task" mode
  */
-export default function TaskModal({ task, onSave, onDelete, onClose, onToast }) {
+export default function TaskModal({ task, team = DEFAULT_TEAM, onSave, onDelete, onClose, onToast }) {
   const isNew = !task?.id;
+  const teamList = Array.isArray(team) && team.length > 0 ? team : DEFAULT_TEAM;
+  const defaultAssignee = teamList[0]?.name || TEAM[0];
 
   const [form, setForm] = useState(() =>
     isNew
-      ? { ...EMPTY_FORM }
+      ? { ...EMPTY_FORM, assignee: defaultAssignee }
       : {
           title:       task.title       || '',
           description: task.description || '',
           type:        task.type        || 'feature',
           status:      task.status      || 'todo',
-          assignee:    task.assignee    || TEAM[0],
+          assignee:    task.assignee    || defaultAssignee,
           dueDate:     task.dueDate     || '',
           context:     task.context     || CONTEXT_TEMPLATE,
           contextTool: task.contextTool || null,
@@ -82,11 +84,13 @@ export default function TaskModal({ task, onSave, onDelete, onClose, onToast }) 
 
   const handleCopy = () => {
     const md = buildPromptContext({ ...task, ...form });
-    copyToClipboard(md).then(() => {
-      onToast('Context copied. Hand it off to your AI tool.', 'success');
-      setCopied(true);
-      setTimeout(() => setCopied(false), 1800);
-    });
+    copyToClipboard(md)
+      .then(() => {
+        onToast('Context copied. Hand it off to your AI tool.', 'success');
+        setCopied(true);
+        setTimeout(() => setCopied(false), 1800);
+      })
+      .catch(() => onToast('Could not copy context. Check clipboard permissions and try again.', 'error'));
   };
 
   return (
@@ -181,7 +185,11 @@ export default function TaskModal({ task, onSave, onDelete, onClose, onToast }) 
             <div>
               <label htmlFor="m-assignee" className="neu-label">Assignee</label>
               <select id="m-assignee" value={form.assignee} onChange={field('assignee')} className="neu-input w-full">
-                {TEAM.map((n) => <option key={n} value={n}>{n}</option>)}
+                {teamList.map((m) => (
+                  <option key={m.id || m.name} value={m.name}>
+                    {m.name} {m.email ? `(${m.email})` : ''}
+                  </option>
+                ))}
               </select>
             </div>
             <div>
@@ -193,7 +201,14 @@ export default function TaskModal({ task, onSave, onDelete, onClose, onToast }) 
           {/* Hand off panel (edit mode only) */}
           {!isNew && (
             <div className="mb-[14px] rounded border-[3px] border-text-primary bg-white p-[14px] shadow-[3px_3px_0_0_#FF5C7A]">
-              <p className="font-body font-bold text-[13px] mb-2 text-text-primary">⇥ Hand off to…</p>
+              <div className="flex items-center justify-between mb-2">
+                <p className="font-body font-bold text-[13px] text-text-primary">⇥ Hand off to…</p>
+                {form.assignee !== task.assignee && (
+                  <span className="font-mono text-[11px] font-bold text-brand-primary bg-brand-primary/10 border border-brand-primary px-2 py-[1px] rounded">
+                    Pending handoff on Save
+                  </span>
+                )}
+              </div>
               <div className="flex items-center gap-[10px]">
                 <AssigneeBadge name={form.assignee} size="md" />
                 <select
@@ -203,7 +218,11 @@ export default function TaskModal({ task, onSave, onDelete, onClose, onToast }) 
                   aria-label="Reassign task to a teammate"
                   className="neu-input flex-1"
                 >
-                  {TEAM.map((n) => <option key={n} value={n}>{n}</option>)}
+                  {teamList.map((m) => (
+                    <option key={m.id || m.name} value={m.name}>
+                      {m.name} {m.email ? `(${m.email})` : ''}
+                    </option>
+                  ))}
                 </select>
               </div>
             </div>

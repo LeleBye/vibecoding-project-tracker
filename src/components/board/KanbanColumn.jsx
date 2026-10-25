@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import TaskCard from './TaskCard.jsx';
 
 /**
@@ -24,6 +24,14 @@ export default function KanbanColumn({
   // Yellow ('review') column needs dark text; all others use light cream text
   const isDark = stage.id !== 'review';
   const [isDragOver, setIsDragOver] = useState(false);
+
+  useEffect(() => {
+    if (!draggingTaskId) {
+      setIsDragOver(false);
+    }
+  }, [draggingTaskId]);
+
+  const isColumnDragOver = isDragOver && Boolean(draggingTaskId);
 
   const handleDragOver = (e) => {
     e.preventDefault();
@@ -71,13 +79,13 @@ export default function KanbanColumn({
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
         onDrop={handleDrop}
-        className={`flex min-h-[220px] flex-1 flex-col gap-[10px] p-3 transition-colors duration-[120ms] ${isDragOver ? 'bg-[#F7F2E7] outline outline-3 outline-dashed outline-offset-[-4px] outline-text-primary' : 'bg-surface-page'}`}
+        className={`flex min-h-[220px] flex-1 flex-col gap-[10px] p-3 transition-colors duration-[120ms] ${isColumnDragOver ? 'bg-[#F7F2E7] outline outline-3 outline-dashed outline-offset-[-4px] outline-text-primary' : 'bg-surface-page'}`}
       >
         {tasks.length === 0 ? (
           <div
-            className={`rounded border-2 border-dashed border-text-primary px-4 py-6 text-center font-body text-[13px] transition-colors duration-[120ms] ${isDragOver ? 'bg-brand-primary/10 font-bold text-text-primary' : 'bg-transparent font-medium text-text-muted'}`}
+            className={`rounded border-2 border-dashed border-text-primary px-4 py-6 text-center font-body text-[13px] transition-colors duration-[120ms] ${isColumnDragOver ? 'bg-brand-primary/10 font-bold text-text-primary' : 'bg-transparent font-medium text-text-muted'}`}
           >
-            {isDragOver ? '+ Drop task here!' : 'Nothing here! …yet'}
+            {isColumnDragOver ? '+ Drop task here!' : 'Nothing here! …yet'}
           </div>
         ) : (
           <>
@@ -94,7 +102,7 @@ export default function KanbanColumn({
                 draggingTaskId={draggingTaskId}
               />
             ))}
-            {isDragOver && (
+            {isColumnDragOver && (
               <div className="border-2 border-dashed border-text-primary rounded px-3 py-2 text-center font-mono text-[11px] font-bold text-text-primary bg-white/75">
                 + Drop to place at end of column
               </div>

@@ -10,8 +10,15 @@ export const STAGES = [
   { id: 'done',        label: 'Done'        },
 ];
 
-/** Allowed assignee values — PRD §8. Only one teammate in this solo run. */
-export const TEAM = ['Benjamin Rosser'];
+/** Default team members with Name and Email (FR07, FR08). */
+export const DEFAULT_TEAM = [
+  { id: 'tm-1', name: 'Benjamin Rosser', email: 'benjamin.rosser@example.com' },
+  { id: 'tm-2', name: 'Sarah Chen', email: 'sarah.chen@example.com' },
+  { id: 'tm-3', name: 'Alex Rivera', email: 'alex.rivera@example.com' },
+];
+
+/** Allowed assignee values — derived from DEFAULT_TEAM for backwards compatibility. */
+export const TEAM = DEFAULT_TEAM.map((m) => m.name);
 
 /** Allowed AI tools for the Context dropdown. */
 export const AI_TOOLS = ['Claude', 'ChatGPT', 'Cursor', 'Lovable', 'Replit', 'Other'];
