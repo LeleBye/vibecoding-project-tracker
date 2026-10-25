@@ -1,8 +1,9 @@
 # AI Agent Context — Vibecoding Project Tracker
 
 **Last audited:** 25 October 2026  
-**Repository state at audit:** `main` working tree with multi-teammate management and handoff system (FR07, FR08)  
-**Verification completed:** `npm run build` passed (Vite production build). There is no automated test or lint command.
+**Repository state at audit:** `main` working tree with multi-teammate management, handoff system, and project board creation/deletion with GitHub-style verification  
+**Verification completed:** `npm run build` passed (Vite production build). All 15 functional verification steps tested. There is no automated test or lint command.
+
 
 Use this file as the working context for changes in this repository. It records the shipped application, the non-negotiable product boundaries, and the checks an agent must make before claiming work is complete.
 
@@ -123,11 +124,12 @@ Use Tailwind utilities and the existing `.neu-*` primitives rather than creating
 
 ## 7. Current shipped behavior
 
-- **Header/workspaces:** The header presents the product identity, an Add Task action, a Team management modal trigger showing member count, and a selector for `vibecoding`, `mobile-app`, and `website-refresh`. Switching projects also switches locally persisted tasks and anchors.
-- **Team management:** The team modal allows adding members with Name and Email, inline editing member details (automatically synchronizing assignees across existing tasks upon name change), and removing members with two-step double-click confirmation ("✕ Delete" → "⚠ Confirm Delete").
+- **Header/workspaces:** The header presents the product identity and three consolidated modal action buttons: "Project" (displays the active board name and opens the unified project management modal to switch, create, and delete boards), "Team" (displays member count and opens the team roster modal), and "Add task" (opens the task creation modal). Switching projects switches locally persisted tasks and anchors.
+- **Project board management:** Allows creating new project boards with custom name, description, and auto-initialized 4-stage Kanban workflow and 4 anchor slots. Deleting project boards features thorough GitHub-style verification requiring the user to type the exact board name to enable the irreversible deletion action. When the active project is deleted, the app automatically transitions to another remaining board. Deletion is prevented when only one board remains.
+- **Team management:** The team modal allows adding members with Name and Email, inline editing member details (automatically synchronizing assignees across existing tasks upon name change), and removing members with two-step double-click confirmation ("✕ Delete" → "! Confirm Delete"). Removing a team member automatically reassigns their tasks across all projects to the "Unassigned" state.
 - **Anchor Board:** Four cards sit above the board. Each shows an empty/linked state, supports inline label/URL editing, saves on Enter or Save, cancels on Escape, and opens saved links in a new tab.
-- **Kanban:** The main workspace always renders the four locked columns. Cards open the task modal by click or Enter/Space. HTML5 drag-and-drop moves and reorders cards (column drop target styling and "+ Drop to place at end of column" indicators cleanly reset upon card drop or drag end); the task status select remains available.
-- **Task modal:** One modal creates, edits, deletes (two-step confirmation), changes status/type/assignee/due date, exposes the handoff control for existing tasks with live confirmation toast upon reassignment save, and closes by Cancel, close button, backdrop, or Escape. Title is the only required field.
+- **Kanban:** The main workspace always renders the four locked columns. Cards open the task modal by click or Enter/Space. Unassigned tasks display a dedicated Neubrutalist dashed-border avatar icon in place of member initials. HTML5 drag-and-drop moves and reorders cards (column drop target styling and "+ Drop to place at end of column" indicators cleanly reset upon card drop or drag end); the task status select remains available.
+- **Task modal:** One modal creates, edits, deletes (two-step confirmation), changes status/type/assignee/due date, exposes the handoff/unassign control for existing tasks with live confirmation toast upon reassignment save, and closes by Cancel, close button, backdrop, or Escape. New tasks default to "Unassigned". Title is the only required field.
 - **Context:** New tasks start with the fixed Background / Constraints / Tried so far / Pick up from here Markdown template. Context timestamps update only when the context itself changes; the selected AI tool is stored separately. Context is human-written, never generated or sent by the app.
 - **Copy:** A card and modal action copy a Markdown task briefing with task metadata, title, description, and full Context. Successful copy shows local button feedback and a toast; failed clipboard writes show an error toast.
 - **Urgency:** `getDueState()` treats completed tasks as neutral first; undated tasks have no urgency badge; past dates are overdue; less than 24 hours is warning; remaining future dates are safe.
@@ -140,6 +142,7 @@ Never clear or rename these keys casually:
 | Data | Key |
 | --- | --- |
 | Active project | `vibetracker.activeProject` |
+| Project boards roster | `vibetracker.projects` |
 | Team roster | `vibetracker.team` |
 | Vibecoding tasks (legacy-compatible) | `vibetracker.tasks` |
 | Vibecoding anchors (legacy-compatible) | `vibetracker.anchors` |
@@ -147,6 +150,7 @@ Never clear or rename these keys casually:
 | Other project anchors | `vibetracker.project.<projectId>.anchors` |
 
 The hooks tolerate unreadable JSON by falling back to their supplied initial value. `App` also protects rendering from non-array task/anchor values. Preserve these safety characteristics when touching persistence.
+
 
 ## 9. Known limitations and follow-up candidates
 

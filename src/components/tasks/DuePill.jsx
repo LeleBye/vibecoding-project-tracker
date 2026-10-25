@@ -9,7 +9,7 @@ export default function DuePill({ dueDate, status }) {
   if (state === 'none' || state === 'neutral') return null;
   const cfg = {
     safe: { label: 'On track', icon: '✓', bg: 'bg-due-safe' },
-    warning: { label: 'Due soon', icon: '⚡', bg: 'bg-due-warning' },
+    warning: { label: 'Due soon', icon: '!', bg: 'bg-due-warning' },
     overdue: { label: 'Overdue', icon: '!', bg: 'bg-due-overdue' },
   }[state];
 

@@ -83,14 +83,15 @@ function AnchorCard({ anchor, onChange }) {
           <span
             className={`ml-auto shrink-0 rounded-sm border-2 border-text-primary px-[5px] py-[1px] font-mono text-[10px] font-bold ${filled ? 'bg-black/10 text-text-primary' : 'bg-[#F0EDE5] text-text-muted'}`}
           >
-            {filled ? '✓ LINKED' : '○ EMPTY'}
+            <span aria-hidden="true">{filled ? '✓' : '○'}</span>
+            <span className="sr-only sm:not-sr-only"> {filled ? 'LINKED' : 'EMPTY'}</span>
           </span>
         )}
       </div>
 
       {/* URL area */}
       {editing ? (
-        <div className="flex gap-[5px] min-w-0">
+        <div className="flex min-w-0 flex-wrap gap-[5px] sm:flex-nowrap">
           <input
             type="url"
             value={draft}
@@ -98,21 +99,21 @@ function AnchorCard({ anchor, onChange }) {
             onKeyDown={(e) => { if (e.key === 'Enter') save(); if (e.key === 'Escape') cancel(); }}
             placeholder="https://..."
             aria-label={`URL for ${anchor.label}`}
-            className="neu-input flex-1 min-w-0 font-mono text-[11px]"
+            className="neu-input min-w-0 basis-full font-mono text-[11px] sm:flex-1 sm:basis-auto"
           />
           <button
             onClick={save}
             disabled={!titleDraft.trim()}
-            className="neu-button shrink-0 px-[10px] py-[4px] font-mono text-[11px] font-bold disabled:cursor-not-allowed disabled:opacity-50"
+            className="neu-button min-h-[36px] flex-1 px-[10px] py-[4px] font-mono text-[11px] font-bold disabled:cursor-not-allowed disabled:opacity-50 sm:min-h-0 sm:flex-none sm:shrink-0"
           >
             Save
           </button>
-          <button onClick={cancel} className="neu-button shrink-0 bg-white px-[10px] py-[4px] font-mono text-[11px] font-bold">
+          <button onClick={cancel} className="neu-button min-h-[36px] flex-1 bg-white px-[10px] py-[4px] font-mono text-[11px] font-bold sm:min-h-0 sm:flex-none sm:shrink-0">
             Cancel
           </button>
         </div>
       ) : (
-        <div className="flex items-center gap-[6px] min-w-0">
+        <div className="flex min-w-0 flex-col items-stretch gap-[6px] sm:flex-row sm:items-center">
           {filled ? (
             <a
               href={anchor.url}
@@ -135,7 +136,7 @@ function AnchorCard({ anchor, onChange }) {
               setEditing(true);
             }}
             aria-label={`${filled ? 'Edit' : 'Add'} URL for ${anchor.label}`}
-            className="neu-button shrink-0 font-mono text-[10px] font-bold px-2 py-[3px]"
+            className="neu-button min-h-[36px] shrink-0 font-mono text-[10px] font-bold px-2 py-[3px] sm:min-h-0"
           >
             {filled ? 'Edit' : '+ Add'}
           </button>
@@ -147,18 +148,40 @@ function AnchorCard({ anchor, onChange }) {
 
 /**
  * Anchor Board section — four equal-width anchor cards above the Kanban (M11).
+ * Phones: collapsed by default behind a toggle showing how many are linked.
  */
 export default function AnchorBoard({ anchors, onAnchorChange }) {
   const safeAnchors = Array.isArray(anchors) ? anchors : SEED_ANCHORS;
+  const [expanded, setExpanded] = useState(false);
+  const linkedCount = safeAnchors.filter((a) => a.url && a.url.trim()).length;
+
   return (
-    <section aria-label="Deliverable Anchor Board" className="mb-7">
+    <section aria-label="Deliverable Anchor Board" className={`${expanded ? 'mb-7' : 'mb-5'} md:mb-7`}>
       <div className="flex items-center gap-[10px] mb-3">
         <h2 className="font-heading text-[13px] tracking-[1px] uppercase text-text-primary m-0">
           Deliverable Anchors
         </h2>
         <div className="flex-1 h-[3px] bg-text-primary" />
+        <button
+          id="toggle-anchors-btn"
+          type="button"
+          onClick={() => setExpanded((v) => !v)}
+          aria-expanded={expanded}
+          aria-controls="anchor-grid"
+          className="flex min-h-[36px] shrink-0 items-center gap-1.5 rounded border-2 border-text-primary bg-white px-2.5 py-1 font-mono text-[11px] font-bold text-text-primary shadow-neu-sm active:translate-x-px active:translate-y-px active:shadow-none md:hidden"
+        >
+          <span className={`rounded-sm border-2 border-text-primary px-1 ${linkedCount > 0 ? 'bg-brand-accent' : 'bg-[#F0EDE5]'}`}>
+            {linkedCount}/{safeAnchors.length}
+          </span>
+          linked
+          <span className="sr-only">{expanded ? ', hide anchors' : ', show anchors'}</span>
+          <span aria-hidden="true" className={`inline-block transition-transform duration-150 ${expanded ? 'rotate-180' : ''}`}>▾</span>
+        </button>
       </div>
-      <div className="grid grid-cols-4 gap-3">
+      <div
+        id="anchor-grid"
+        className={`${expanded ? 'grid' : 'hidden'} grid-cols-2 gap-3 md:grid lg:grid-cols-4`}
+      >
         {safeAnchors.map((a) => (
           <AnchorCard key={a.id} anchor={a} onChange={(changes) => onAnchorChange(a.id, changes)} />
         ))}

@@ -61,3 +61,37 @@ export const PROJECTS = [
     ],
   },
 ];
+
+export const DEFAULT_ANCHORS = [
+  { id: 'presentation', label: 'Presentation', url: null },
+  { id: 'demo', label: 'Demo', url: null },
+  { id: 'report', label: 'Report', url: null },
+  { id: 'documentation', label: 'Documentation', url: null },
+];
+
+/**
+ * Creates a new project metadata object ready for persistence.
+ * @param {string} name
+ * @param {string} description
+ * @param {Array} existingProjects
+ */
+export function createProjectObject(name, description = '', existingProjects = []) {
+  const trimmedName = name.trim();
+  const slug = trimmedName
+    .toLowerCase()
+    .replace(/[^\w\s-]/g, '')
+    .replace(/[\s_-]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+
+  const baseId = slug || 'project';
+  const idExists = existingProjects.some((p) => p.id === baseId);
+  const id = idExists ? `${baseId}-${Date.now().toString().slice(-4)}` : baseId;
+
+  return {
+    id,
+    name: trimmedName,
+    description: description.trim(),
+    initialTasks: [],
+    initialAnchors: DEFAULT_ANCHORS,
+  };
+}

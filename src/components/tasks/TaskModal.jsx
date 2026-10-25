@@ -3,6 +3,7 @@ import AssigneeBadge from '../tasks/AssigneeBadge.jsx';
 import { STAGES, TEAM, DEFAULT_TEAM, AI_TOOLS, CONTEXT_TEMPLATE, EMPTY_FORM } from '../../constants/taskConfig.js';
 import { uid, todayStr, timeAgo, buildPromptContext } from '../../utils/taskUtils.js';
 import { copyToClipboard } from '../../utils/clipboard.js';
+import { isDesktopViewport } from '../../utils/viewport.js';
 
 /**
  * Task add/edit/delete modal (M5, M9, M10, M12).
@@ -13,7 +14,7 @@ import { copyToClipboard } from '../../utils/clipboard.js';
 export default function TaskModal({ task, team = DEFAULT_TEAM, onSave, onDelete, onClose, onToast }) {
   const isNew = !task?.id;
   const teamList = Array.isArray(team) && team.length > 0 ? team : DEFAULT_TEAM;
-  const defaultAssignee = teamList[0]?.name || TEAM[0];
+  const defaultAssignee = 'Unassigned';
 
   const [form, setForm] = useState(() =>
     isNew
@@ -34,8 +35,10 @@ export default function TaskModal({ task, team = DEFAULT_TEAM, onSave, onDelete,
   const [copied, setCopied]               = useState(false);
   const titleRef                          = useRef(null);
 
-  // Auto-focus title on open
-  useEffect(() => { if (titleRef.current) titleRef.current.focus(); }, []);
+  // Auto-focus title on open (on phones only for new tasks, so editing doesn't pop the keyboard over the task)
+  useEffect(() => {
+    if (titleRef.current && (isNew || isDesktopViewport())) titleRef.current.focus();
+  }, [isNew]);
 
   // Escape to close
   useEffect(() => {
@@ -62,7 +65,7 @@ export default function TaskModal({ task, team = DEFAULT_TEAM, onSave, onDelete,
       description: form.description.trim(),
       type:        form.type,
       status:      form.status,
-      assignee:    form.assignee,
+      assignee:    form.assignee || 'Unassigned',
       dueDate:     form.dueDate || null,
       context:     form.context,
       contextTool: form.contextTool,
@@ -70,9 +73,16 @@ export default function TaskModal({ task, team = DEFAULT_TEAM, onSave, onDelete,
         ? new Date().toISOString()
         : (task.contextUpdatedAt || null),
     };
-    const wasHandoff = !isNew && saved.assignee !== task.assignee;
+    const prevAssignee = task?.assignee || 'Unassigned';
+    const wasHandoff = !isNew && saved.assignee !== prevAssignee;
     onSave(saved);
-    if (wasHandoff) onToast(`Task handed off to ${saved.assignee}.`, 'handoff');
+    if (wasHandoff) {
+      if (saved.assignee === 'Unassigned') {
+        onToast('Task marked as unassigned.', 'handoff');
+      } else {
+        onToast(`Task handed off to ${saved.assignee}.`, 'handoff');
+      }
+    }
     onClose();
   };
 
@@ -106,24 +116,24 @@ export default function TaskModal({ task, team = DEFAULT_TEAM, onSave, onDelete,
         role="dialog"
         aria-modal="true"
         aria-label={isNew ? 'Add task' : `Edit task: ${task.title}`}
-        className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-[1001] w-[90%] max-w-[660px] max-h-[90vh] overflow-y-auto bg-surface-page border-[3px] border-text-primary shadow-neu-lg rounded flex flex-col"
+        className="neu-sheet md:max-w-[660px]"
       >
         {/* Modal header */}
-        <div className="bg-text-primary text-surface-page px-5 py-[14px] flex items-center justify-between shrink-0">
+        <div className="neu-sheet-header bg-text-primary text-surface-page px-4 pb-[14px] flex items-center justify-between md:px-5 md:pb-[14px]">
           <span className="font-heading text-[16px] tracking-[0.5px]">
             {isNew ? '+ NEW TASK' : 'EDIT TASK'}
           </span>
           <button
             onClick={onClose}
             aria-label="Close modal"
-            className="neu-icon-button border-2 border-surface-page text-surface-page bg-transparent w-8 h-8"
+            className="neu-sheet-close border-surface-page text-surface-page bg-transparent hover:bg-surface-page hover:text-text-primary transition-[transform,box-shadow,background-color,color] duration-[80ms] hover:shadow-[2px_2px_0_0_#FFF8E8]"
           >
             ✕
           </button>
         </div>
 
         {/* Body */}
-        <div className="p-5 flex-1">
+        <div className="neu-sheet-body p-4 md:p-5">
 
           {/* Title */}
           <div className="mb-[14px]">
@@ -163,16 +173,16 @@ export default function TaskModal({ task, team = DEFAULT_TEAM, onSave, onDelete,
 
           {/* Type + Status */}
           <div className="grid grid-cols-2 gap-3 mb-[14px]">
-            <div>
+            <div className="min-w-0">
               <label htmlFor="m-type" className="neu-label">Type</label>
-              <select id="m-type" value={form.type} onChange={field('type')} className="neu-input w-full">
+              <select id="m-type" value={form.type} onChange={field('type')} className="neu-input w-full min-w-0">
                 <option value="feature">★ Feature</option>
                 <option value="bug">✕ Bug</option>
               </select>
             </div>
-            <div>
+            <div className="min-w-0">
               <label htmlFor="m-status" className="neu-label">Status</label>
-              <select id="m-status" value={form.status} onChange={field('status')} className="neu-input w-full">
+              <select id="m-status" value={form.status} onChange={field('status')} className="neu-input w-full min-w-0">
                 {STAGES.map((s) => (
                   <option key={s.id} value={s.id}>{s.label}</option>
                 ))}
@@ -181,45 +191,55 @@ export default function TaskModal({ task, team = DEFAULT_TEAM, onSave, onDelete,
           </div>
 
           {/* Assignee + Due date */}
-          <div className="grid grid-cols-2 gap-3 mb-[14px]">
-            <div>
+          <div className="grid grid-cols-1 gap-3 mb-[14px] sm:grid-cols-2">
+            <div className="min-w-0">
               <label htmlFor="m-assignee" className="neu-label">Assignee</label>
-              <select id="m-assignee" value={form.assignee} onChange={field('assignee')} className="neu-input w-full">
-                {teamList.map((m) => (
-                  <option key={m.id || m.name} value={m.name}>
-                    {m.name} {m.email ? `(${m.email})` : ''}
-                  </option>
-                ))}
-              </select>
+              <div className="flex items-center gap-2 min-w-0 w-full">
+                <AssigneeBadge name={form.assignee} size="sm" />
+                <select
+                  id="m-assignee"
+                  value={form.assignee}
+                  onChange={field('assignee')}
+                  className="neu-input flex-1 min-w-0 max-w-full truncate"
+                >
+                  <option value="Unassigned">Unassigned</option>
+                  {teamList.map((m) => (
+                    <option key={m.id || m.name} value={m.name} title={m.email || m.name}>
+                      {m.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
             </div>
-            <div>
+            <div className="min-w-0">
               <label htmlFor="m-due" className="neu-label">Due date</label>
-              <input id="m-due" type="date" value={form.dueDate} onChange={field('dueDate')} className="neu-input w-full" />
+              <input id="m-due" type="date" value={form.dueDate} onChange={field('dueDate')} className="neu-input w-full min-w-0" />
             </div>
           </div>
 
           {/* Hand off panel (edit mode only) */}
           {!isNew && (
             <div className="mb-[14px] rounded border-[3px] border-text-primary bg-white p-[14px] shadow-[3px_3px_0_0_#FF5C7A]">
-              <div className="flex items-center justify-between mb-2">
-                <p className="font-body font-bold text-[13px] text-text-primary">⇥ Hand off to…</p>
-                {form.assignee !== task.assignee && (
+              <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
+                <p className="font-body font-bold text-[13px] text-text-primary">⇥ Hand off / Assign to…</p>
+                {form.assignee !== (task.assignee || 'Unassigned') && (
                   <span className="font-mono text-[11px] font-bold text-brand-primary bg-brand-primary/10 border border-brand-primary px-2 py-[1px] rounded">
-                    Pending handoff on Save
+                    Pending assignment on Save
                   </span>
                 )}
               </div>
-              <div className="flex items-center gap-[10px]">
+              <div className="flex items-center gap-[10px] min-w-0">
                 <AssigneeBadge name={form.assignee} size="md" />
                 <select
                   id="m-handoff"
                   value={form.assignee}
                   onChange={field('assignee')}
-                  aria-label="Reassign task to a teammate"
-                  className="neu-input flex-1"
+                  aria-label="Reassign task to a teammate or unassign"
+                  className="neu-input flex-1 min-w-0 max-w-full truncate"
                 >
+                  <option value="Unassigned">Unassigned</option>
                   {teamList.map((m) => (
-                    <option key={m.id || m.name} value={m.name}>
+                    <option key={m.id || m.name} value={m.name} title={m.email || m.name}>
                       {m.name} {m.email ? `(${m.email})` : ''}
                     </option>
                   ))}
@@ -272,7 +292,7 @@ export default function TaskModal({ task, team = DEFAULT_TEAM, onSave, onDelete,
             <div className="mt-[10px]">
               <button
                 onClick={handleCopy}
-                className={`cursor-pointer rounded border-[3px] border-text-primary px-[18px] py-2 font-mono text-[13px] font-bold transition-colors duration-150 ${copied ? 'bg-brand-accent text-text-primary shadow-none' : 'bg-text-primary text-surface-page shadow-[3px_3px_0_0_#625D66]'}`}
+                className={`w-full cursor-pointer rounded border-[3px] border-text-primary px-[18px] py-2.5 font-mono text-[13px] font-bold transition-[transform,box-shadow,background-color] duration-[80ms] active:translate-x-px active:translate-y-px active:shadow-none sm:w-auto sm:py-2 ${copied ? 'bg-brand-accent text-text-primary shadow-none' : 'bg-text-primary text-surface-page shadow-neu-sm hover:-translate-x-px hover:-translate-y-px hover:shadow-neu'}`}
               >
                 {copied ? '✓ Copied to clipboard' : '⇥ Copy as Prompt Context'}
               </button>
@@ -281,24 +301,31 @@ export default function TaskModal({ task, team = DEFAULT_TEAM, onSave, onDelete,
         </div>
 
         {/* Footer */}
-        <div className="px-5 py-[14px] border-t-[3px] border-text-primary flex justify-between items-center shrink-0 gap-[10px] bg-surface-page">
+        <div className="neu-sheet-footer px-4 pt-[14px] border-t-[3px] border-text-primary flex justify-between items-center gap-2 bg-surface-page md:px-5 md:gap-[10px]">
           <div>
             {!isNew && (
               <button
                 onClick={handleDelete}
-                className={`neu-button font-body text-[13px] font-bold text-text-primary px-[14px] py-2 transition-colors duration-150 ${confirmDelete ? 'bg-type-bug' : 'bg-white'}`}
+                className={`neu-button min-h-[44px] font-body text-[13px] font-bold text-text-primary px-3 py-2 transition-[transform,box-shadow,background-color] duration-[80ms] md:min-h-0 md:px-[14px] ${confirmDelete ? 'bg-type-bug' : 'bg-white'}`}
               >
-                {confirmDelete ? '⚠ Confirm Delete' : '✕ Delete task'}
+                {confirmDelete ? (
+                  <>! Confirm<span className="hidden sm:inline"> Delete</span></>
+                ) : (
+                  <>✕ Delete<span className="hidden sm:inline"> task</span></>
+                )}
               </button>
             )}
           </div>
-          <div className="flex gap-[10px]">
-            <button onClick={onClose} className="neu-button bg-white text-text-primary font-body font-bold text-[13px] px-[18px] py-2">
+          <div className="flex gap-2 md:gap-[10px]">
+            <button
+              onClick={onClose}
+              className="min-h-[44px] font-heading text-[13px] tracking-[0.5px] uppercase bg-white text-text-primary border-[3px] border-text-primary shadow-neu rounded px-3 py-2 cursor-pointer transition-[transform,box-shadow] duration-[80ms] hover:-translate-x-px hover:-translate-y-px hover:shadow-neu-lg active:translate-x-[2px] active:translate-y-[2px] active:shadow-neu-sm sm:px-[18px] md:min-h-0"
+            >
               Cancel
             </button>
             <button
               onClick={handleSave}
-              className="font-heading text-[13px] tracking-[0.5px] bg-brand-primary text-white border-[3px] border-text-primary shadow-neu rounded px-[22px] py-2 cursor-pointer transition-[transform,box-shadow] duration-[80ms] active:translate-x-[2px] active:translate-y-[2px] active:shadow-neu-sm"
+              className="min-h-[44px] font-heading text-[13px] tracking-[0.5px] uppercase bg-brand-primary text-white border-[3px] border-text-primary shadow-neu rounded px-4 py-2 cursor-pointer transition-[transform,box-shadow] duration-[80ms] hover:-translate-x-px hover:-translate-y-px hover:shadow-neu-lg active:translate-x-[2px] active:translate-y-[2px] active:shadow-neu-sm sm:px-[22px] md:min-h-0"
             >
               {isNew ? 'CREATE' : 'SAVE'}
             </button>

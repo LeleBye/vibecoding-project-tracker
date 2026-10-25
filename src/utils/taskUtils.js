@@ -58,6 +58,7 @@ export function timeAgo(iso) {
 
 /** Extract initials from a full name (up to 2). */
 export function initials(name) {
+  if (!name || name === 'Unassigned') return '';
   return name
     .split(' ')
     .map((w) => w[0])

@@ -60,9 +60,9 @@ export default function KanbanColumn({
       aria-label={`${stage.label} column, ${tasks.length} tasks`}
       className="flex flex-col flex-1"
     >
-      {/* Column header */}
+      {/* Column header (phones show the stage in the sticky tab bar instead) */}
       <div
-        className={`flex items-center justify-between border-b-[3px] border-text-primary px-[14px] py-[10px] ${accentClass}`}
+        className={`hidden items-center justify-between border-b-[3px] border-text-primary px-[14px] py-[10px] md:flex ${accentClass}`}
       >
         <span className="font-heading text-[13px] tracking-[0.5px] uppercase">
           {stage.label}
@@ -79,13 +79,20 @@ export default function KanbanColumn({
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
         onDrop={handleDrop}
-        className={`flex min-h-[220px] flex-1 flex-col gap-[10px] p-3 transition-colors duration-[120ms] ${isColumnDragOver ? 'bg-[#F7F2E7] outline outline-3 outline-dashed outline-offset-[-4px] outline-text-primary' : 'bg-surface-page'}`}
+        className={`flex min-h-[160px] flex-1 flex-col gap-[10px] p-3 transition-colors duration-[120ms] md:min-h-[220px] ${isColumnDragOver ? 'bg-[#F7F2E7] outline outline-3 outline-dashed outline-offset-[-4px] outline-text-primary' : 'bg-surface-page'}`}
       >
         {tasks.length === 0 ? (
           <div
             className={`rounded border-2 border-dashed border-text-primary px-4 py-6 text-center font-body text-[13px] transition-colors duration-[120ms] ${isColumnDragOver ? 'bg-brand-primary/10 font-bold text-text-primary' : 'bg-transparent font-medium text-text-muted'}`}
           >
-            {isColumnDragOver ? '+ Drop task here!' : 'Nothing here! …yet'}
+            {isColumnDragOver ? '+ Drop task here!' : (
+              <>
+                Nothing here! …yet
+                <span className="mt-1 block font-mono text-[11px] md:hidden">
+                  Tap + Add task, or move a card here from another stage.
+                </span>
+              </>
+            )}
           </div>
         ) : (
           <>

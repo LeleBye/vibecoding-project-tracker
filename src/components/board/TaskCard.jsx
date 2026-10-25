@@ -6,6 +6,7 @@ import DuePill from '../tasks/DuePill.jsx';
 import { getDueState } from '../../utils/taskUtils.js';
 import { buildPromptContext } from '../../utils/taskUtils.js';
 import { copyToClipboard } from '../../utils/clipboard.js';
+import { STAGES } from '../../constants/taskConfig.js';
 
 /**
  * Individual Kanban task card.
@@ -105,7 +106,7 @@ export default function TaskCard({
           onClick(task);
         }
       }}
-      aria-label={`${task.title}. ${task.type}. Assigned to ${task.assignee}. Draggable.`}
+      aria-label={`${task.title}. ${task.type}. ${task.assignee && task.assignee !== 'Unassigned' ? `Assigned to ${task.assignee}` : 'Unassigned'}. Draggable.`}
       className={`relative flex ${cursorClass} flex-col gap-[10px] overflow-hidden rounded border-[3px] border-text-primary p-[14px] transition-[transform,box-shadow,opacity] duration-[80ms] ${dueClass} ${isDragging ? 'opacity-[0.35] shadow-none' : isOverCard ? '-translate-x-[2px] -translate-y-[2px] shadow-neu-lg outline outline-2 outline-dashed outline-offset-2' : 'shadow-neu hover:-translate-x-px hover:-translate-y-px hover:shadow-neu-lg'}`}
     >
       {/* type stripe */}
@@ -132,17 +133,38 @@ export default function TaskCard({
         )}
       </div>
 
-      {/* copy button */}
-      <div className="pl-[10px]">
+      {/* copy button + phone-only stage mover */}
+      <div className="flex flex-wrap items-center gap-2 pl-[10px]">
         <button
           onClick={handleCopy}
           onMouseDown={(e) => e.stopPropagation()}
           onKeyDown={(e) => e.stopPropagation()}
           aria-label="Copy as Prompt Context"
-          className={`font-mono text-[11px] font-bold rounded-sm border-2 border-text-primary px-[10px] py-[4px] cursor-pointer transition-colors duration-150 ${copied ? 'bg-brand-accent text-text-primary shadow-none' : 'bg-text-primary text-surface-page shadow-neu-sm'}`}
+          className={`min-h-[36px] font-mono text-[11px] font-bold rounded-sm border-2 border-text-primary px-[10px] py-[4px] cursor-pointer transition-[transform,box-shadow,background-color] duration-[80ms] active:translate-x-px active:translate-y-px active:shadow-none md:min-h-0 ${copied ? 'bg-brand-accent text-text-primary shadow-none' : 'bg-text-primary text-surface-page shadow-neu-sm hover:-translate-x-px hover:-translate-y-px hover:shadow-neu'}`}
         >
           {copied ? '✓ Copied!' : '⇥ Copy Context'}
         </button>
+
+        {onMoveTask && (
+          <label
+            className="flex min-w-0 flex-1 items-center gap-1.5 md:hidden"
+            onClick={(e) => e.stopPropagation()}
+            onMouseDown={(e) => e.stopPropagation()}
+            onKeyDown={(e) => e.stopPropagation()}
+          >
+            <span className="shrink-0 font-mono text-[11px] font-bold text-text-primary">Move</span>
+            <select
+              value={task.status}
+              onChange={(e) => onMoveTask(task.id, e.target.value)}
+              aria-label={`Move "${task.title}" to stage`}
+              className="min-h-[36px] min-w-0 flex-1 cursor-pointer rounded-sm border-2 border-text-primary bg-white px-2 py-1 font-mono font-bold text-text-primary shadow-neu-sm"
+            >
+              {STAGES.map((s) => (
+                <option key={s.id} value={s.id}>{s.label}</option>
+              ))}
+            </select>
+          </label>
+        )}
       </div>
     </article>
   );

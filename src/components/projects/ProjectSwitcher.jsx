@@ -1,4 +1,13 @@
-export default function ProjectSwitcher({ projects, value, onChange }) {
+export default function ProjectSwitcher({
+  projects,
+  value,
+  onChange,
+  onCreateProject,
+  onDeleteProject,
+}) {
+  const currentProject = projects.find((project) => project.id === value) || projects[0];
+  const canDelete = projects.length > 1;
+
   return (
     <div className="flex items-center gap-2">
       <label htmlFor="project-switcher" className="font-mono text-[11px] font-bold uppercase tracking-[0.08em] text-brand-accent">
@@ -20,6 +29,29 @@ export default function ProjectSwitcher({ projects, value, onChange }) {
           ▾
         </span>
       </div>
+      <button
+        id="create-project-btn"
+        type="button"
+        onClick={onCreateProject}
+        title="Create new project board"
+        aria-label="Create new project board"
+        className="flex items-center gap-1 rounded border-[3px] border-surface-page bg-surface-card px-2.5 py-[9px] font-heading text-[13px] tracking-[0.5px] text-text-primary shadow-neu transition-[transform,box-shadow] duration-[80ms] hover:-translate-x-px hover:-translate-y-px hover:shadow-neu-lg active:translate-x-[2px] active:translate-y-[2px] active:shadow-neu-sm"
+      >
+        <span aria-hidden="true" className="text-sm font-bold leading-none">+</span>
+        <span>New</span>
+      </button>
+      <button
+        id="delete-project-btn"
+        type="button"
+        onClick={onDeleteProject}
+        disabled={!canDelete}
+        title={!canDelete ? 'Cannot delete the only project board' : `Delete "${currentProject?.name || 'project'}" board`}
+        aria-label={`Delete ${currentProject?.name || 'project'} board`}
+        className="flex items-center justify-center rounded border-[3px] border-surface-page bg-surface-card px-2.5 py-[9px] font-heading text-[13px] text-text-primary shadow-neu transition-[transform,box-shadow] duration-[80ms] hover:-translate-x-px hover:-translate-y-px hover:shadow-neu-lg active:translate-x-[2px] active:translate-y-[2px] active:shadow-neu-sm disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:translate-x-0 disabled:hover:translate-y-0 disabled:hover:shadow-neu"
+      >
+        <span aria-hidden="true" className="text-sm font-bold">✕</span>
+      </button>
     </div>
   );
 }
+

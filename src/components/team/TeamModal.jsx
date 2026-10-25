@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import AssigneeBadge from '../tasks/AssigneeBadge.jsx';
+import { isDesktopViewport } from '../../utils/viewport.js';
 
 /**
  * Team Management Modal (FR07, FR08).
@@ -32,9 +33,9 @@ export default function TeamModal({
   // Double-click delete confirmation state (matches TaskModal)
   const [confirmDeleteId, setConfirmDeleteId] = useState(null);
 
-  // Focus name input when modal opens
+  // Focus name input when modal opens (desktop only — on phones it would pop the keyboard over the roster)
   useEffect(() => {
-    if (isOpen && nameInputRef.current) {
+    if (isOpen && nameInputRef.current && isDesktopViewport()) {
       nameInputRef.current.focus();
     }
   }, [isOpen]);
@@ -199,34 +200,37 @@ export default function TeamModal({
         role="dialog"
         aria-modal="true"
         aria-label="Manage Team Members"
-        className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-[1001] w-[90%] max-w-[640px] max-h-[90vh] overflow-y-auto bg-surface-page border-[3px] border-text-primary shadow-neu-lg rounded flex flex-col"
+        className="neu-sheet md:max-w-[660px]"
       >
         {/* Header */}
-        <div className="bg-text-primary text-surface-page px-5 py-[14px] flex items-center justify-between shrink-0">
-          <div className="flex items-center gap-2">
-            <span aria-hidden="true" className="text-xl">👥</span>
-            <span className="font-heading text-[16px] tracking-[0.5px]">
-              TEAM MEMBERS ({team.length})
+        <div className="neu-sheet-header bg-text-primary text-surface-page px-4 pb-4 flex items-center justify-between border-b-[3px] border-text-primary md:px-6">
+          <div className="flex items-center gap-2.5">
+            <span aria-hidden="true" className="font-mono text-brand-primary text-lg font-bold">●</span>
+            <span className="font-heading text-[16px] tracking-[0.5px] uppercase">
+              TEAM MEMBERS
+            </span>
+            <span className="font-mono text-[11px] font-bold px-2 py-[1px] rounded border border-surface-page bg-surface-page text-text-primary">
+              {team.length}
             </span>
           </div>
           <button
             onClick={onClose}
             aria-label="Close team modal"
-            className="neu-icon-button border-2 border-surface-page text-surface-page bg-transparent w-8 h-8"
+            className="neu-sheet-close border-surface-page text-surface-page bg-transparent hover:bg-surface-page hover:text-text-primary transition-[transform,box-shadow,background-color,color] duration-[80ms] hover:shadow-[2px_2px_0_0_#FFF8E8]"
           >
             ✕
           </button>
         </div>
 
         {/* Content */}
-        <div className="p-5 flex-1 space-y-6">
+        <div className="neu-sheet-body p-4 space-y-6 md:p-6">
           {/* Add Member Form */}
-          <section className="rounded border-[3px] border-text-primary bg-white p-4 shadow-neu-sm">
-            <h3 className="font-heading text-[13px] tracking-[0.5px] uppercase text-text-primary mb-3">
-              + Add New Teammate
+          <section className="rounded border-[3px] border-text-primary bg-white p-4 shadow-neu md:p-5">
+            <h3 className="font-heading text-[13px] tracking-[0.5px] uppercase text-text-primary mb-3.5 flex items-center gap-1.5">
+              <span className="text-brand-primary font-bold">+</span> ADD NEW TEAMMATE
             </h3>
-            <form onSubmit={handleAddSubmit} className="space-y-3">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <form onSubmit={handleAddSubmit} className="space-y-3.5">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                 <div>
                   <label htmlFor="team-name-input" className="neu-label">
                     Full Name <span aria-hidden="true" className="text-brand-primary">*</span>
@@ -241,10 +245,10 @@ export default function TeamModal({
                       if (errors.name) setErrors((prev) => ({ ...prev, name: null }));
                     }}
                     placeholder="e.g. Maya Lin"
-                    className={`neu-input w-full ${errors.name ? 'border-type-bug' : ''}`}
+                    className={`neu-input w-full py-2 ${errors.name ? 'border-type-bug' : ''}`}
                   />
                   {errors.name && (
-                    <p role="alert" className="text-type-bug text-[11px] mt-1 font-body">
+                    <p role="alert" className="text-type-bug text-[11px] mt-1 font-body font-bold">
                       {errors.name}
                     </p>
                   )}
@@ -263,10 +267,10 @@ export default function TeamModal({
                       if (errors.email) setErrors((prev) => ({ ...prev, email: null }));
                     }}
                     placeholder="e.g. maya@example.com"
-                    className={`neu-input w-full ${errors.email ? 'border-type-bug' : ''}`}
+                    className={`neu-input w-full py-2 ${errors.email ? 'border-type-bug' : ''}`}
                   />
                   {errors.email && (
-                    <p role="alert" className="text-type-bug text-[11px] mt-1 font-body">
+                    <p role="alert" className="text-type-bug text-[11px] mt-1 font-body font-bold">
                       {errors.email}
                     </p>
                   )}
@@ -276,7 +280,7 @@ export default function TeamModal({
               <div className="flex justify-end pt-1">
                 <button
                   type="submit"
-                  className="font-heading text-[12px] tracking-[0.5px] bg-brand-primary text-white border-[2px] border-text-primary shadow-neu-sm rounded px-4 py-2 cursor-pointer transition-[transform,box-shadow] duration-[80ms] active:translate-x-px active:translate-y-px"
+                  className="w-full font-heading text-[12px] tracking-[0.5px] uppercase bg-brand-primary text-white border-[3px] border-text-primary shadow-neu rounded px-5 py-3 cursor-pointer transition-[transform,box-shadow] duration-[80ms] hover:-translate-x-px hover:-translate-y-px hover:shadow-neu-lg active:translate-x-[2px] active:translate-y-[2px] active:shadow-neu-sm sm:w-auto sm:py-2.5"
                 >
                   + Add Teammate
                 </button>
@@ -300,18 +304,18 @@ export default function TeamModal({
                   return (
                     <div
                       key={member.id || member.name}
-                      className="p-3.5 rounded border-2 border-text-primary bg-[#FBF9F5] shadow-neu-sm space-y-3"
+                      className="p-4 rounded border-[3px] border-text-primary bg-[#FBF9F5] shadow-neu space-y-3.5"
                     >
                       <div className="flex items-center justify-between">
-                        <span className="font-heading text-[12px] tracking-[0.5px] uppercase text-text-primary">
-                          Edit Teammate
+                        <span className="font-heading text-[13px] tracking-[0.5px] uppercase text-text-primary">
+                          EDIT TEAMMATE
                         </span>
-                        <span className="font-mono text-[11px] text-text-muted">
+                        <span className="font-mono text-[11px] font-bold px-2 py-0.5 rounded border border-text-primary bg-white text-text-muted">
                           {count} assigned task{count !== 1 ? 's' : ''}
                         </span>
                       </div>
 
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                         <div>
                           <label htmlFor={`edit-name-${member.id}`} className="neu-label text-[11px]">
                             Full Name <span aria-hidden="true" className="text-brand-primary">*</span>
@@ -325,10 +329,10 @@ export default function TeamModal({
                               setEditName(e.target.value);
                               if (editErrors.name) setEditErrors((prev) => ({ ...prev, name: null }));
                             }}
-                            className={`neu-input w-full text-[13px] py-1.5 ${editErrors.name ? 'border-type-bug' : ''}`}
+                            className={`neu-input w-full text-[13px] py-2 ${editErrors.name ? 'border-type-bug' : ''}`}
                           />
                           {editErrors.name && (
-                            <p role="alert" className="text-type-bug text-[10px] mt-1 font-body">
+                            <p role="alert" className="text-type-bug text-[10px] mt-1 font-body font-bold">
                               {editErrors.name}
                             </p>
                           )}
@@ -346,28 +350,28 @@ export default function TeamModal({
                               setEditEmail(e.target.value);
                               if (editErrors.email) setEditErrors((prev) => ({ ...prev, email: null }));
                             }}
-                            className={`neu-input w-full text-[13px] py-1.5 ${editErrors.email ? 'border-type-bug' : ''}`}
+                            className={`neu-input w-full text-[13px] py-2 ${editErrors.email ? 'border-type-bug' : ''}`}
                           />
                           {editErrors.email && (
-                            <p role="alert" className="text-type-bug text-[10px] mt-1 font-body">
+                            <p role="alert" className="text-type-bug text-[10px] mt-1 font-body font-bold">
                               {editErrors.email}
                             </p>
                           )}
                         </div>
                       </div>
 
-                      <div className="flex justify-end gap-2 pt-1">
+                      <div className="flex justify-end gap-2.5 pt-1">
                         <button
                           type="button"
                           onClick={handleCancelEdit}
-                          className="neu-button bg-white text-text-primary text-[12px] font-bold px-3 py-1.5"
+                          className="font-heading text-[12px] tracking-[0.5px] uppercase px-4 py-2 rounded border-[3px] border-text-primary bg-white text-text-primary shadow-neu-sm transition-[transform,box-shadow] duration-[80ms] hover:-translate-x-px hover:-translate-y-px hover:shadow-neu active:translate-x-[1px] active:translate-y-[1px] cursor-pointer"
                         >
                           Cancel
                         </button>
                         <button
                           type="button"
                           onClick={() => handleSaveEdit(member)}
-                          className="font-heading text-[12px] tracking-[0.5px] bg-brand-primary text-white border-[2px] border-text-primary shadow-neu-sm rounded px-3.5 py-1.5 cursor-pointer active:translate-x-px active:translate-y-px"
+                          className="font-heading text-[12px] tracking-[0.5px] uppercase px-4 py-2 rounded border-[3px] border-text-primary bg-brand-primary text-white shadow-neu-sm transition-[transform,box-shadow] duration-[80ms] hover:-translate-x-px hover:-translate-y-px hover:shadow-neu active:translate-x-[1px] active:translate-y-[1px] cursor-pointer"
                         >
                           Save Changes
                         </button>
@@ -379,7 +383,7 @@ export default function TeamModal({
                 return (
                   <div
                     key={member.id || member.name}
-                    className="flex items-center justify-between gap-3 p-3 rounded border-2 border-text-primary bg-white shadow-neu-sm transition-[border-color,background-color] duration-150"
+                    className="flex flex-col items-stretch gap-3 p-4 rounded border-[3px] border-text-primary bg-white shadow-neu transition-[border-color,background-color] duration-150 hover:bg-[#FBF9F5] sm:flex-row sm:items-center sm:justify-between"
                   >
                     <div className="flex items-center gap-3 min-w-0">
                       <AssigneeBadge name={member.name} size="md" />
@@ -388,25 +392,25 @@ export default function TeamModal({
                           <p className="font-body font-bold text-[14px] text-text-primary truncate">
                             {member.name}
                           </p>
-                          <span className="font-mono text-[11px] font-bold px-2 py-[1px] rounded bg-[#F0EDE5] border border-text-primary text-text-muted shrink-0">
+                          <span className="font-mono text-[11px] font-bold px-2 py-[2px] rounded bg-[#F0EDE5] border-2 border-text-primary text-text-muted shrink-0">
                             {count} task{count !== 1 ? 's' : ''}
                           </span>
                         </div>
-                        <p className="font-mono text-[12px] text-text-muted truncate">
+                        <p className="font-mono text-[12px] text-text-muted truncate mt-0.5">
                           {member.email || 'No email registered'}
                         </p>
                       </div>
                     </div>
 
-                    <div className="flex items-center gap-2 shrink-0">
+                    <div className="grid grid-cols-2 gap-2 shrink-0 sm:flex sm:items-center">
                       {/* Edit Button */}
                       <button
                         type="button"
                         onClick={() => handleStartEdit(member)}
                         aria-label={`Edit ${member.name}`}
-                        className="neu-button text-[12px] font-bold px-2.5 py-1 text-text-primary bg-white"
+                        className="min-h-[40px] font-heading text-[12px] tracking-[0.5px] uppercase px-3.5 py-1.5 rounded border-[3px] border-text-primary bg-surface-card text-text-primary shadow-neu-sm transition-[transform,box-shadow] duration-[80ms] hover:-translate-x-px hover:-translate-y-px hover:shadow-neu active:translate-x-[1px] active:translate-y-[1px] cursor-pointer sm:min-h-0"
                       >
-                        ✎ Edit
+                        Edit
                       </button>
 
                       {/* Remove Button with Double-Click Verification */}
@@ -415,11 +419,11 @@ export default function TeamModal({
                         disabled={isOnlyMember}
                         onClick={() => handleDelete(member)}
                         title={isOnlyMember ? 'Cannot remove the only team member' : `Delete ${member.name}`}
-                        className={`neu-button text-[12px] font-bold px-2.5 py-1 transition-colors duration-150 disabled:opacity-40 disabled:cursor-not-allowed ${
-                          isConfirmingDelete ? 'bg-type-bug text-text-primary' : 'bg-white text-text-primary'
+                        className={`min-h-[40px] font-heading text-[12px] tracking-[0.5px] uppercase px-3 py-1.5 rounded border-[3px] border-text-primary shadow-neu-sm transition-[transform,box-shadow,background-color] duration-[80ms] hover:-translate-x-px hover:-translate-y-px hover:shadow-neu active:translate-x-[1px] active:translate-y-[1px] disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:translate-x-0 disabled:hover:translate-y-0 disabled:hover:shadow-neu-sm sm:min-h-0 ${
+                          isConfirmingDelete ? 'bg-type-bug text-text-primary' : 'bg-white text-text-primary hover:bg-type-bug hover:text-white'
                         }`}
                       >
-                        {isConfirmingDelete ? '⚠ Confirm Delete' : '✕ Delete'}
+                        {isConfirmingDelete ? '! Confirm Delete' : '✕ Delete'}
                       </button>
                     </div>
                   </div>
@@ -430,10 +434,10 @@ export default function TeamModal({
         </div>
 
         {/* Footer */}
-        <div className="px-5 py-3 border-t-[3px] border-text-primary bg-surface-page flex justify-end shrink-0">
+        <div className="neu-sheet-footer px-4 pt-4 border-t-[3px] border-text-primary bg-surface-page flex justify-end md:px-6">
           <button
             onClick={onClose}
-            className="neu-button bg-white text-text-primary font-body font-bold text-[13px] px-5 py-2"
+            className="w-full font-heading text-[13px] tracking-[0.5px] uppercase bg-white text-text-primary border-[3px] border-text-primary shadow-neu rounded px-6 py-3 cursor-pointer transition-[transform,box-shadow] duration-[80ms] hover:-translate-x-px hover:-translate-y-px hover:shadow-neu-lg active:translate-x-[2px] active:translate-y-[2px] active:shadow-neu-sm sm:w-auto sm:py-2.5"
           >
             Done
           </button>

@@ -21,7 +21,7 @@ export default function Toast({ message, type, onDismiss }) {
     <div
       role="status"
       aria-live="polite"
-      className={`fixed bottom-6 right-6 z-[9999] ${bgClass} border-[3px] border-text-primary shadow-neu rounded px-5 py-3 font-body font-semibold text-sm max-w-xs animate-toast`}
+      className={`fixed inset-x-4 bottom-[calc(88px+env(safe-area-inset-bottom))] z-[9999] ${bgClass} border-[3px] border-text-primary shadow-neu rounded px-5 py-3 font-body font-semibold text-sm animate-toast md:inset-x-auto md:bottom-6 md:right-6 md:max-w-xs`}
     >
       {message}
     </div>

@@ -42,9 +42,9 @@ export const CONTEXT_TEMPLATE = `## Background\n\n## Constraints\n\n## Tried so 
  */
 export const DUE_STATE_CFG = {
   none:    { bg: '#FFFFFF', label: null,       icon: null },
-  safe:    { bg: '#B9F5C5', label: 'On track', icon: '✓'  },
-  warning: { bg: '#FFD166', label: 'Due soon', icon: '⚡' },
-  overdue: { bg: '#FF8A8A', label: 'Overdue',  icon: '!'  },
+  safe:    { bg: '#B9F5C5', label: 'On track', icon: '✓' },
+  warning: { bg: '#FFD166', label: 'Due soon', icon: '!' },
+  overdue: { bg: '#FF8A8A', label: 'Overdue',  icon: '!' },
   neutral: { bg: '#D9D9D9', label: 'Done',     icon: '✓'  },
 };
 
@@ -79,7 +79,7 @@ export const EMPTY_FORM = {
   description: '',
   type:        'feature',
   status:      'todo',
-  assignee:    TEAM[0],
+  assignee:    'Unassigned',
   dueDate:     '',
   context:     CONTEXT_TEMPLATE,
   contextTool: null,
