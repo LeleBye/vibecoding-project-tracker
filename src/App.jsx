@@ -247,7 +247,7 @@ export default function App() {
   }, [project.initialAnchors, setAnchors]);
 
   return (
-    <div className="min-h-screen bg-surface-page font-body text-text-primary">
+    <div className="flex min-h-screen flex-col bg-surface-page font-body text-text-primary">
       <AppHeader
         onAddTask={() => setModalTask(null)}
         currentProject={project}
@@ -256,7 +256,7 @@ export default function App() {
         teamCount={safeTeam.length}
         onOpenTeam={() => setIsTeamModalOpen(true)}
       />
-      <main className="mx-auto max-w-[1600px] px-4 pt-5 pb-[calc(7rem+env(safe-area-inset-bottom))] md:px-8 md:py-7">
+      <main className="mx-auto flex w-full max-w-[1600px] flex-1 flex-col px-4 pt-5 pb-0 md:px-8 md:py-7">
         <AnchorBoard anchors={safeAnchors} onAnchorChange={handleAnchorChange} />
         <KanbanBoard
           tasks={safeTasks}
