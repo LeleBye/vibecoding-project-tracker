@@ -260,6 +260,7 @@ export default function App() {
         <AnchorBoard anchors={safeAnchors} onAnchorChange={handleAnchorChange} />
         <KanbanBoard
           tasks={safeTasks}
+          team={safeTeam}
           draggingTaskId={draggingTaskId}
           onCardClick={setModalTask}
           onCopy={(_, type) => (

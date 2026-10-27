@@ -1,6 +1,8 @@
-import { useRef, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import KanbanColumn from './KanbanColumn.jsx';
-import { STAGES } from '../../constants/taskConfig.js';
+import BoardToolbar from './BoardToolbar.jsx';
+import { STAGES, SORT_OPTIONS, FILTER_GROUPS, DEFAULT_SORT, DEFAULT_FILTER } from '../../constants/taskConfig.js';
+import { filterTasks, sortTasks } from '../../utils/taskUtils.js';
 
 // Matches the column header colours in KanbanColumn.
 const STAGE_TAB_ACTIVE = {
@@ -29,9 +31,13 @@ const SWIPE_MIN_DISTANCE = 35;
  * bottom of the page) is designated as a swipable area to navigate between columns.
  * Column borders are removed on mobile so cards take up full width.
  * Tablets (md): 2 × 2 grid. Desktop (lg+): the original four-column row.
+ *
+ * Sort + filter (BoardToolbar) are session-only view state applied to a copy of
+ * `tasks`; stored task order only changes via drag-reorder in "Manual" sort.
  */
 export default function KanbanBoard({
   tasks,
+  team = [],
   draggingTaskId,
   onCardClick,
   onCopy,
@@ -40,10 +46,30 @@ export default function KanbanBoard({
   onDragEnd,
 }) {
   const [activeStage, setActiveStage] = useState(STAGES[0].id);
+  // Display-only view state; resets to the defaults on reload.
+  const [sort, setSort] = useState(DEFAULT_SORT);
+  const [filter, setFilter] = useState(DEFAULT_FILTER);
   const tabBarRef = useRef(null);
   const columnsRef = useRef(null);
   const touchStartRef = useRef(null);
   const lastSwipeTimeRef = useRef(0);
+
+  // Fall back to defaults if a value is no longer valid (e.g. a filtered teammate was removed/renamed).
+  const validFilters = useMemo(() => new Set([
+    DEFAULT_FILTER,
+    'assignee:Unassigned',
+    ...FILTER_GROUPS.flatMap((group) => group.options.map((option) => option.id)),
+    ...team.map((member) => `assignee:${member.name}`),
+  ]), [team]);
+  const activeFilter = validFilters.has(filter) ? filter : DEFAULT_FILTER;
+  const activeSort = SORT_OPTIONS.some((option) => option.id === sort) ? sort : DEFAULT_SORT;
+  const canReorder = activeSort === 'manual';
+
+  const visibleTasks = useMemo(
+    () => sortTasks(filterTasks(tasks, activeFilter), activeSort),
+    [tasks, activeFilter, activeSort]
+  );
+  const isFiltered = activeFilter !== DEFAULT_FILTER;
 
   const selectStage = (stageId) => {
     setActiveStage(stageId);
@@ -107,10 +133,24 @@ export default function KanbanBoard({
           Task Board
         </h2>
         <div className="flex-1 h-[3px] bg-text-primary" />
-        <span className="font-mono text-[12px] text-text-muted">
-          {tasks.length} task{tasks.length !== 1 ? 's' : ''}
+        <span aria-live="polite" className="font-mono text-[12px] text-text-muted">
+          {isFiltered
+            ? `${visibleTasks.length} of ${tasks.length} task${tasks.length !== 1 ? 's' : ''}`
+            : `${tasks.length} task${tasks.length !== 1 ? 's' : ''}`}
         </span>
       </div>
+
+      <BoardToolbar
+        sort={activeSort}
+        filter={activeFilter}
+        team={team}
+        onSortChange={setSort}
+        onFilterChange={setFilter}
+        onReset={() => {
+          setSort(DEFAULT_SORT);
+          setFilter(DEFAULT_FILTER);
+        }}
+      />
 
       {/* Phone-only stage switcher */}
       <div
@@ -119,7 +159,7 @@ export default function KanbanBoard({
       >
         <div role="group" aria-label="Choose workflow stage to show" className="grid grid-cols-4 gap-1.5">
           {STAGES.map((stage) => {
-            const count = tasks.filter((t) => t.status === stage.id).length;
+            const count = visibleTasks.filter((t) => t.status === stage.id).length;
             const isActive = stage.id === activeStage;
             return (
               <button
@@ -178,7 +218,12 @@ export default function KanbanBoard({
           >
             <KanbanColumn
               stage={stage}
-              tasks={tasks.filter((t) => t.status === stage.id)}
+              tasks={visibleTasks.filter((t) => t.status === stage.id)}
+              hiddenCount={isFiltered
+                ? tasks.filter((t) => t.status === stage.id).length
+                  - visibleTasks.filter((t) => t.status === stage.id).length
+                : 0}
+              canReorder={canReorder}
               onCardClick={handleCardClick}
               onCopy={onCopy}
               onMoveTask={onMoveTask}

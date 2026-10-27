@@ -32,6 +32,7 @@ export default function TeamModal({
 
   // Double-click delete confirmation state (matches TaskModal)
   const [confirmDeleteId, setConfirmDeleteId] = useState(null);
+  const confirmDeleteBtnRef = useRef(null);
 
   // Focus name input when modal opens (desktop only — on phones it would pop the keyboard over the roster)
   useEffect(() => {
@@ -47,7 +48,7 @@ export default function TeamModal({
     }
   }, [editingId]);
 
-  // Escape key to close or cancel edit
+  // Escape key to close or cancel edit/confirm delete
   useEffect(() => {
     if (!isOpen) return;
     const handleKeyDown = (e) => {
@@ -65,6 +66,22 @@ export default function TeamModal({
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isOpen, editingId, confirmDeleteId, onClose]);
+
+  // Click outside delete button cancels confirmation and resets button state
+  useEffect(() => {
+    if (!confirmDeleteId) return;
+    const handleClickOutside = (e) => {
+      if (confirmDeleteBtnRef.current && !confirmDeleteBtnRef.current.contains(e.target)) {
+        setConfirmDeleteId(null);
+      }
+    };
+    document.addEventListener('pointerdown', handleClickOutside);
+    document.addEventListener('click', handleClickOutside);
+    return () => {
+      document.removeEventListener('pointerdown', handleClickOutside);
+      document.removeEventListener('click', handleClickOutside);
+    };
+  }, [confirmDeleteId]);
 
   if (!isOpen) return null;
 
@@ -415,10 +432,12 @@ export default function TeamModal({
 
                       {/* Remove Button with Double-Click Verification */}
                       <button
+                        ref={isConfirmingDelete ? confirmDeleteBtnRef : null}
                         type="button"
                         disabled={isOnlyMember}
                         onClick={() => handleDelete(member)}
                         title={isOnlyMember ? 'Cannot remove the only team member' : `Delete ${member.name}`}
+                        aria-label={isConfirmingDelete ? `Confirm delete ${member.name}` : `Delete ${member.name}`}
                         className={`min-h-[40px] font-heading text-[12px] tracking-[0.5px] uppercase px-3 py-1.5 rounded border-[3px] border-text-primary shadow-neu-sm transition-[transform,box-shadow,background-color] duration-[80ms] hover:-translate-x-px hover:-translate-y-px hover:shadow-neu active:translate-x-[1px] active:translate-y-[1px] disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:translate-x-0 disabled:hover:translate-y-0 disabled:hover:shadow-neu-sm sm:min-h-0 ${
                           isConfirmingDelete ? 'bg-type-bug text-text-primary' : 'bg-white text-text-primary hover:bg-type-bug hover:text-white'
                         }`}

@@ -6,7 +6,8 @@ import DuePill from '../tasks/DuePill.jsx';
 import { getDueState } from '../../utils/taskUtils.js';
 import { buildPromptContext } from '../../utils/taskUtils.js';
 import { copyToClipboard } from '../../utils/clipboard.js';
-import { STAGES } from '../../constants/taskConfig.js';
+import { STAGES, COL_ACCENTS } from '../../constants/taskConfig.js';
+import NeuSelect from '../common/NeuSelect.jsx';
 
 /**
  * Individual Kanban task card.
@@ -21,6 +22,7 @@ export default function TaskCard({
   onDragEnd,
   onMoveTask,
   draggingTaskId,
+  canReorder = true,
 }) {
   const dueState = getDueState(task.dueDate, task.status);
   const [copied, setCopied] = useState(false);
@@ -66,6 +68,8 @@ export default function TaskCard({
         onDragEnd?.();
       }}
       onDragOver={(e) => {
+        // Sorted views: let the column handle the drop (stage change only).
+        if (!canReorder) return;
         if (draggingTaskId && draggingTaskId !== task.id) {
           e.preventDefault();
           e.stopPropagation();
@@ -82,6 +86,7 @@ export default function TaskCard({
         }
       }}
       onDrop={(e) => {
+        if (!canReorder) return;
         if (draggingTaskId && draggingTaskId !== task.id) {
           e.preventDefault();
           e.stopPropagation();
@@ -146,24 +151,36 @@ export default function TaskCard({
         </button>
 
         {onMoveTask && (
-          <label
+          <div
             className="flex min-w-0 flex-1 items-center gap-1.5 md:hidden"
             onClick={(e) => e.stopPropagation()}
             onMouseDown={(e) => e.stopPropagation()}
             onKeyDown={(e) => e.stopPropagation()}
           >
             <span className="shrink-0 font-mono text-[11px] font-bold text-text-primary">Move</span>
-            <select
-              value={task.status}
-              onChange={(e) => onMoveTask(task.id, e.target.value)}
-              aria-label={`Move "${task.title}" to stage`}
-              className="min-h-[36px] min-w-0 flex-1 cursor-pointer rounded-sm border-2 border-text-primary bg-white px-2 py-1 font-mono font-bold text-text-primary shadow-neu-sm"
-            >
-              {STAGES.map((s) => (
-                <option key={s.id} value={s.id}>{s.label}</option>
-              ))}
-            </select>
-          </label>
+            <div className="min-w-0 flex-1">
+              <NeuSelect
+                id={`move-task-${task.id}`}
+                value={task.status}
+                onChange={(e) => onMoveTask(task.id, e.target.value)}
+                aria-label={`Move "${task.title}" to stage`}
+                options={STAGES.map((s) => ({
+                  value: s.id,
+                  label: s.label,
+                  icon: (
+                    <span
+                      aria-hidden="true"
+                      className="inline-block h-2.5 w-2.5 rounded-full border border-text-primary"
+                      style={{ backgroundColor: COL_ACCENTS[s.id] || '#171717' }}
+                    />
+                  ),
+                }))}
+                className="w-full"
+                buttonClassName="min-h-[34px] px-2 py-1 font-mono text-[11px] font-bold border-2"
+                menuClassName="min-w-[160px]"
+              />
+            </div>
+          </div>
         )}
       </div>
     </article>

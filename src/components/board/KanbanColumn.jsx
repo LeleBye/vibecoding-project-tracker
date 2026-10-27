@@ -4,10 +4,15 @@ import TaskCard from './TaskCard.jsx';
 /**
  * Single Kanban column — renders its own header, drag-over state, task list,
  * and empty-state placeholder.
+ * `tasks` arrive already filtered and sorted by KanbanBoard; `hiddenCount` is
+ * how many of this stage's tasks the active filter hides. When `canReorder` is
+ * false (an automatic sort is active), drops only change the stage.
  */
 export default function KanbanColumn({
   stage,
   tasks,
+  hiddenCount = 0,
+  canReorder = true,
   onCardClick,
   onCopy,
   onMoveTask,
@@ -50,6 +55,8 @@ export default function KanbanColumn({
     setIsDragOver(false);
     const taskId = e.dataTransfer.getData('text/plain') || draggingTaskId;
     onDragEnd?.();
+    // In sorted views a same-column drop has no visible effect; skip it to keep stored order intact.
+    if (!canReorder && tasks.some((t) => t.id === taskId)) return;
     if (taskId && onMoveTask) {
       onMoveTask(taskId, stage.id);
     }
@@ -85,7 +92,14 @@ export default function KanbanColumn({
           <div
             className={`rounded border-2 border-dashed border-text-primary px-4 py-6 text-center font-body text-[13px] transition-colors duration-[120ms] ${isColumnDragOver ? 'bg-brand-primary/10 font-bold text-text-primary' : 'bg-transparent font-medium text-text-muted'}`}
           >
-            {isColumnDragOver ? '+ Drop task here!' : (
+            {isColumnDragOver ? '+ Drop task here!' : hiddenCount > 0 ? (
+              <>
+                No matching tasks
+                <span className="mt-1 block font-mono text-[11px]">
+                  {hiddenCount} hidden by the current filter
+                </span>
+              </>
+            ) : (
               <>
                 Nothing here! …yet
                 <span className="mt-1 block font-mono text-[11px] md:hidden">
@@ -107,12 +121,18 @@ export default function KanbanColumn({
                 onDragEnd={onDragEnd}
                 onMoveTask={onMoveTask}
                 draggingTaskId={draggingTaskId}
+                canReorder={canReorder}
               />
             ))}
             {isColumnDragOver && (
               <div className="border-2 border-dashed border-text-primary rounded px-3 py-2 text-center font-mono text-[11px] font-bold text-text-primary bg-white/75">
-                + Drop to place at end of column
+                {canReorder ? '+ Drop to place at end of column' : `+ Drop to move to ${stage.label}`}
               </div>
+            )}
+            {hiddenCount > 0 && (
+              <p className="m-0 text-center font-mono text-[11px] text-text-muted">
+                + {hiddenCount} hidden by filter
+              </p>
             )}
           </>
         )}

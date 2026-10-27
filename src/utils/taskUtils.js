@@ -77,6 +77,88 @@ export function fmtDate(dateStr) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+// Task Board view helpers (display-only filter + sort)
+// ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * Return the tasks matching a `kind:value` filter id (see FILTER_GROUPS).
+ * Unknown ids and 'all' return the input unchanged.
+ */
+export function filterTasks(tasks, filterId) {
+  if (!filterId || filterId === 'all') return tasks;
+  const separator = filterId.indexOf(':');
+  if (separator < 0) return tasks;
+  const kind = filterId.slice(0, separator);
+  const value = filterId.slice(separator + 1);
+
+  switch (kind) {
+    case 'type':
+      return tasks.filter((t) => t.type === value);
+    case 'due':
+      if (value === 'none') return tasks.filter((t) => !t.dueDate);
+      return tasks.filter((t) => getDueState(t.dueDate, t.status) === value);
+    case 'assignee':
+      return tasks.filter((t) => (t.assignee || 'Unassigned') === value);
+    default:
+      return tasks;
+  }
+}
+
+const compareText = (a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' });
+
+/** Creation timestamp encoded in uid()-style IDs (`task-<ms>-xxxxx`), else null. */
+function idTimestamp(id) {
+  const match = /^task-(\d+)-/.exec(id || '');
+  return match ? Number(match[1]) : null;
+}
+
+const isUnassigned = (task) => !task.assignee || task.assignee === 'Unassigned';
+
+/** Primary comparators; missing values always sort last. */
+const SORT_COMPARATORS = {
+  'created-desc': (a, b) => (b.createdDate || '').localeCompare(a.createdDate || ''),
+  'created-asc': (a, b) => {
+    if (!a.createdDate !== !b.createdDate) return a.createdDate ? -1 : 1;
+    return (a.createdDate || '').localeCompare(b.createdDate || '');
+  },
+  'due-asc': (a, b) => {
+    if (!a.dueDate !== !b.dueDate) return a.dueDate ? -1 : 1;
+    return (a.dueDate || '').localeCompare(b.dueDate || '');
+  },
+  'title-asc': (a, b) => compareText(a.title || '', b.title || ''),
+  'assignee-asc': (a, b) => {
+    if (isUnassigned(a) !== isUnassigned(b)) return isUnassigned(a) ? 1 : -1;
+    return compareText(a.assignee || '', b.assignee || '');
+  },
+  type: (a, b) => (a.type === 'bug' ? 1 : 0) - (b.type === 'bug' ? 1 : 0),
+};
+
+/**
+ * Return a new, stably sorted copy of tasks. 'manual' (or an unknown id)
+ * returns the stored drag order unchanged.
+ */
+export function sortTasks(tasks, sortId) {
+  const compare = SORT_COMPARATORS[sortId];
+  if (!compare) return tasks;
+  const newestFirst = sortId === 'created-desc';
+
+  return tasks
+    .map((task, index) => ({ task, index }))
+    .sort((a, b) => {
+      const primary = compare(a.task, b.task);
+      if (primary !== 0) return primary;
+      // Same-day creation ties: use the uid() timestamp when both tasks have one.
+      if (sortId === 'created-desc' || sortId === 'created-asc') {
+        const ta = idTimestamp(a.task.id);
+        const tb = idTimestamp(b.task.id);
+        if (ta !== null && tb !== null && ta !== tb) return newestFirst ? tb - ta : ta - tb;
+      }
+      return newestFirst ? b.index - a.index : a.index - b.index;
+    })
+    .map(({ task }) => task);
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // Prompt-context Markdown builder
 // ─────────────────────────────────────────────────────────────────────────────
 

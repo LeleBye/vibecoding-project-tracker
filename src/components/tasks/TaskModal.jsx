@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import AssigneeBadge from '../tasks/AssigneeBadge.jsx';
-import { STAGES, TEAM, DEFAULT_TEAM, AI_TOOLS, CONTEXT_TEMPLATE, EMPTY_FORM } from '../../constants/taskConfig.js';
+import NeuSelect from '../common/NeuSelect.jsx';
+import { STAGES, TEAM, DEFAULT_TEAM, AI_TOOLS, CONTEXT_TEMPLATE, EMPTY_FORM, COL_ACCENTS } from '../../constants/taskConfig.js';
 import { uid, todayStr, timeAgo, buildPromptContext } from '../../utils/taskUtils.js';
 import { copyToClipboard } from '../../utils/clipboard.js';
 import { isDesktopViewport } from '../../utils/viewport.js';
@@ -34,18 +35,43 @@ export default function TaskModal({ task, team = DEFAULT_TEAM, onSave, onDelete,
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [copied, setCopied]               = useState(false);
   const titleRef                          = useRef(null);
+  const deleteBtnRef                      = useRef(null);
 
   // Auto-focus title on open (on phones only for new tasks, so editing doesn't pop the keyboard over the task)
   useEffect(() => {
     if (titleRef.current && (isNew || isDesktopViewport())) titleRef.current.focus();
   }, [isNew]);
 
-  // Escape to close
+  // Escape to close or cancel delete confirmation
   useEffect(() => {
-    const h = (e) => { if (e.key === 'Escape') onClose(); };
+    const h = (e) => {
+      if (e.key === 'Escape') {
+        if (confirmDelete) {
+          setConfirmDelete(false);
+        } else {
+          onClose();
+        }
+      }
+    };
     window.addEventListener('keydown', h);
     return () => window.removeEventListener('keydown', h);
-  }, [onClose]);
+  }, [confirmDelete, onClose]);
+
+  // Click outside delete button cancels confirmation and resets button state
+  useEffect(() => {
+    if (!confirmDelete) return;
+    const handleClickOutside = (e) => {
+      if (deleteBtnRef.current && !deleteBtnRef.current.contains(e.target)) {
+        setConfirmDelete(false);
+      }
+    };
+    document.addEventListener('pointerdown', handleClickOutside);
+    document.addEventListener('click', handleClickOutside);
+    return () => {
+      document.removeEventListener('pointerdown', handleClickOutside);
+      document.removeEventListener('click', handleClickOutside);
+    };
+  }, [confirmDelete]);
 
   const field = (name) => (e) => {
     setForm((f) => ({ ...f, [name]: e.target.value === '' && name === 'contextTool' ? null : e.target.value }));
@@ -102,6 +128,67 @@ export default function TaskModal({ task, team = DEFAULT_TEAM, onSave, onDelete,
       })
       .catch(() => onToast('Could not copy context. Check clipboard permissions and try again.', 'error'));
   };
+
+  const typeOptions = [
+    {
+      value: 'feature',
+      label: 'Feature',
+      badge: (
+        <span className="rounded border border-text-primary bg-type-feature px-1.5 py-0.5 font-mono text-[10px] font-bold text-white shadow-[1px_1px_0px_#171717]">
+          ★ Feature
+        </span>
+      ),
+    },
+    {
+      value: 'bug',
+      label: 'Bug',
+      badge: (
+        <span className="rounded border border-text-primary bg-type-bug px-1.5 py-0.5 font-mono text-[10px] font-bold text-white shadow-[1px_1px_0px_#171717]">
+          ✕ Bug
+        </span>
+      ),
+    },
+  ];
+
+  const statusOptions = STAGES.map((s) => ({
+    value: s.id,
+    label: s.label,
+    icon: (
+      <span
+        aria-hidden="true"
+        className="inline-block h-3 w-3 rounded-full border border-text-primary shadow-[1px_1px_0px_#171717]"
+        style={{ backgroundColor: COL_ACCENTS[s.id] || '#171717' }}
+      />
+    ),
+  }));
+
+  const assigneeOptions = [
+    {
+      value: 'Unassigned',
+      label: 'Unassigned',
+      badge: <AssigneeBadge name="Unassigned" size="sm" />,
+      description: 'Leave task unassigned',
+    },
+    ...teamList.map((m) => ({
+      value: m.name,
+      label: m.name,
+      badge: <AssigneeBadge name={m.name} size="sm" />,
+      description: m.email || undefined,
+    })),
+  ];
+
+  const toolOptions = [
+    { value: '', label: '— None —', icon: '—' },
+    ...AI_TOOLS.map((t) => ({
+      value: t,
+      label: t,
+      badge: (
+        <span className="rounded border border-text-primary bg-[#FFF8E8] px-1.5 py-0.5 font-mono text-[10px] font-bold text-text-primary shadow-[1px_1px_0px_#171717]">
+          AI · {t}
+        </span>
+      ),
+    })),
+  ];
 
   return (
     <>
@@ -175,41 +262,61 @@ export default function TaskModal({ task, team = DEFAULT_TEAM, onSave, onDelete,
           <div className="grid grid-cols-2 gap-3 mb-[14px]">
             <div className="min-w-0">
               <label htmlFor="m-type" className="neu-label">Type</label>
-              <select id="m-type" value={form.type} onChange={field('type')} className="neu-input w-full min-w-0">
-                <option value="feature">★ Feature</option>
-                <option value="bug">✕ Bug</option>
-              </select>
+              <NeuSelect
+                id="m-type"
+                value={form.type}
+                onChange={field('type')}
+                options={typeOptions}
+                aria-label="Task type"
+                className="w-full min-w-0"
+              />
             </div>
             <div className="min-w-0">
               <label htmlFor="m-status" className="neu-label">Status</label>
-              <select id="m-status" value={form.status} onChange={field('status')} className="neu-input w-full min-w-0">
-                {STAGES.map((s) => (
-                  <option key={s.id} value={s.id}>{s.label}</option>
-                ))}
-              </select>
+              <NeuSelect
+                id="m-status"
+                value={form.status}
+                onChange={field('status')}
+                options={statusOptions}
+                aria-label="Task status"
+                className="w-full min-w-0"
+              />
             </div>
           </div>
 
           {/* Assignee + Due date */}
           <div className="grid grid-cols-1 gap-3 mb-[14px] sm:grid-cols-2">
             <div className="min-w-0">
-              <label htmlFor="m-assignee" className="neu-label">Assignee</label>
-              <div className="flex items-center gap-2 min-w-0 w-full">
-                <AssigneeBadge name={form.assignee} size="sm" />
-                <select
-                  id="m-assignee"
-                  value={form.assignee}
-                  onChange={field('assignee')}
-                  className="neu-input flex-1 min-w-0 max-w-full truncate"
-                >
-                  <option value="Unassigned">Unassigned</option>
-                  {teamList.map((m) => (
-                    <option key={m.id || m.name} value={m.name} title={m.email || m.name}>
-                      {m.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
+              <label htmlFor={isNew ? 'm-assignee' : undefined} className="neu-label">
+                Assignee
+              </label>
+              {isNew ? (
+                <div className="flex items-center gap-2 min-w-0 w-full">
+                  <AssigneeBadge name={form.assignee} size="sm" />
+                  <div className="min-w-0 flex-1">
+                    <NeuSelect
+                      id="m-assignee"
+                      value={form.assignee}
+                      onChange={field('assignee')}
+                      options={assigneeOptions}
+                      aria-label="Assign task to a teammate or unassign"
+                      className="w-full"
+                    />
+                  </div>
+                </div>
+              ) : (
+                <div className="flex min-h-[38px] items-center gap-2 rounded border-[3px] border-text-primary bg-[#FBF9F3] px-3 py-1.5 shadow-neu-sm">
+                  <AssigneeBadge name={task.assignee || 'Unassigned'} size="sm" />
+                  <span className="truncate font-body text-sm font-bold text-text-primary">
+                    {task.assignee || 'Unassigned'}
+                  </span>
+                  {teamList.find((m) => m.name === (task.assignee || 'Unassigned'))?.email && (
+                    <span className="hidden truncate font-mono text-[11px] text-text-muted sm:inline">
+                      ({teamList.find((m) => m.name === (task.assignee || 'Unassigned')).email})
+                    </span>
+                  )}
+                </div>
+              )}
             </div>
             <div className="min-w-0">
               <label htmlFor="m-due" className="neu-label">Due date</label>
@@ -230,20 +337,16 @@ export default function TaskModal({ task, team = DEFAULT_TEAM, onSave, onDelete,
               </div>
               <div className="flex items-center gap-[10px] min-w-0">
                 <AssigneeBadge name={form.assignee} size="md" />
-                <select
-                  id="m-handoff"
-                  value={form.assignee}
-                  onChange={field('assignee')}
-                  aria-label="Reassign task to a teammate or unassign"
-                  className="neu-input flex-1 min-w-0 max-w-full truncate"
-                >
-                  <option value="Unassigned">Unassigned</option>
-                  {teamList.map((m) => (
-                    <option key={m.id || m.name} value={m.name} title={m.email || m.name}>
-                      {m.name} {m.email ? `(${m.email})` : ''}
-                    </option>
-                  ))}
-                </select>
+                <div className="min-w-0 flex-1">
+                  <NeuSelect
+                    id="m-handoff"
+                    value={form.assignee}
+                    onChange={field('assignee')}
+                    options={assigneeOptions}
+                    aria-label="Reassign task to a teammate or unassign"
+                    className="w-full"
+                  />
+                </div>
               </div>
             </div>
           )}
@@ -257,15 +360,14 @@ export default function TaskModal({ task, team = DEFAULT_TEAM, onSave, onDelete,
             {/* AI tool */}
             <div className="mb-3">
               <label htmlFor="m-tool" className="neu-label">AI Tool used</label>
-              <select
+              <NeuSelect
                 id="m-tool"
                 value={form.contextTool || ''}
                 onChange={(e) => setForm((f) => ({ ...f, contextTool: e.target.value || null }))}
-                className="neu-input w-full"
-              >
-                <option value="">— None —</option>
-                {AI_TOOLS.map((t) => <option key={t} value={t}>{t}</option>)}
-              </select>
+                options={toolOptions}
+                aria-label="AI tool used for prompt context"
+                className="w-full"
+              />
             </div>
 
             {/* Freshness indicator — M12 */}
@@ -305,7 +407,10 @@ export default function TaskModal({ task, team = DEFAULT_TEAM, onSave, onDelete,
           <div>
             {!isNew && (
               <button
+                ref={deleteBtnRef}
+                type="button"
                 onClick={handleDelete}
+                aria-label={confirmDelete ? 'Confirm delete task' : 'Delete task'}
                 className={`neu-button min-h-[44px] font-body text-[13px] font-bold text-text-primary px-3 py-2 transition-[transform,box-shadow,background-color] duration-[80ms] md:min-h-0 md:px-[14px] ${confirmDelete ? 'bg-type-bug' : 'bg-white'}`}
               >
                 {confirmDelete ? (

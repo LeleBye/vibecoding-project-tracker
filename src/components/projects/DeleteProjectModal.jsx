@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
+import NeuSelect from '../common/NeuSelect.jsx';
 
 /**
  * Modal to delete a project board with GitHub-style verification.
@@ -141,18 +142,19 @@ export default function DeleteProjectModal({
                   <label htmlFor="delete-project-selector" className="neu-label text-[11px]">
                     Board to Delete:
                   </label>
-                  <select
+                  <NeuSelect
                     id="delete-project-selector"
                     value={targetProject.id}
                     onChange={(e) => handleSelectProject(e.target.value)}
-                    className="neu-input w-full font-body text-[13px] font-bold py-2"
-                  >
-                    {projects.map((p) => (
-                      <option key={p.id} value={p.id}>
-                        {p.name}
-                      </option>
-                    ))}
-                  </select>
+                    options={projects.map((p) => ({
+                      value: p.id,
+                      label: p.name,
+                      icon: <span aria-hidden="true" className="font-mono text-brand-primary">⊞</span>,
+                    }))}
+                    aria-label="Board to Delete"
+                    className="w-full"
+                    buttonClassName="font-body text-[13px] font-bold py-2"
+                  />
                 </div>
               )}
 
