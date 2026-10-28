@@ -97,8 +97,8 @@ export default function KanbanBoard({
     const start = touchStartRef.current;
     touchStartRef.current = null;
     if (!start || e.changedTouches.length === 0) return;
-    // Ignore swipes that start on interactive controls (e.g. the card Move select).
-    if (start.target?.closest?.('select, input, textarea')) return;
+    // Ignore swipes that start on interactive controls (e.g. buttons, inputs, selects).
+    if (start.target?.closest?.('button, select, input, textarea, [role="button"]')) return;
     const dx = e.changedTouches[0].clientX - start.x;
     const dy = e.changedTouches[0].clientY - start.y;
     if (Math.abs(dx) < SWIPE_MIN_DISTANCE || Math.abs(dx) < Math.abs(dy) * 1.1) return;

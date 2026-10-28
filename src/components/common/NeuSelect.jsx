@@ -166,7 +166,7 @@ export default function NeuSelect({
       if (triggerRef.current) {
         const rect = triggerRef.current.getBoundingClientRect();
         const spaceBelow = window.innerHeight - rect.bottom;
-        const shouldFlip = spaceBelow < 250 && rect.top > 250;
+        const shouldFlip = spaceBelow < 220 && rect.top > spaceBelow;
         setOpenUpward(shouldFlip);
       }
       const curIndex = flatOptions.findIndex((opt) => String(opt.value) === String(value));
@@ -291,7 +291,7 @@ export default function NeuSelect({
         aria-disabled={opt.disabled}
         onClick={() => !opt.disabled && selectValue(opt.value, opt)}
         onMouseEnter={() => !opt.disabled && setHighlightedIndex(flatIdx)}
-        className={`group flex items-center justify-between gap-2.5 px-3 py-2 text-left transition-colors cursor-pointer select-none border-b border-text-primary/10 last:border-b-0 ${
+        className={`group flex min-h-[40px] items-center justify-between gap-2.5 px-3 py-2 text-left transition-colors cursor-pointer select-none border-b border-text-primary/10 last:border-b-0 ${
           opt.disabled ? 'cursor-not-allowed opacity-50' : ''
         } ${
           isSelected
@@ -423,7 +423,7 @@ export default function NeuSelect({
             openUpward ? 'bottom-full mb-1.5' : 'top-full mt-1.5'
           } ${menuClassName}`}
         >
-          <div className="max-h-64 sm:max-h-72 overflow-y-auto overscroll-contain">
+          <div className="max-h-[min(16rem,50vh)] sm:max-h-72 overflow-y-auto overscroll-contain touch-pan-y">
             {normalizedItems.map((item, itemIdx) => {
               if (item.group && Array.isArray(item.options)) {
                 return (
