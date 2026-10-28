@@ -6,7 +6,7 @@ import DuePill from '../tasks/DuePill.jsx';
 import { getDueState } from '../../utils/taskUtils.js';
 import { buildPromptContext } from '../../utils/taskUtils.js';
 import { copyToClipboard } from '../../utils/clipboard.js';
-import { STAGES, COL_ACCENTS } from '../../constants/taskConfig.js';
+import { STAGES } from '../../constants/taskConfig.js';
 
 const STAGE_MOVER_STYLES = {
   todo: 'bg-text-primary text-surface-page',
@@ -257,16 +257,11 @@ export default function TaskCard({
                       : `${STAGE_MOVER_STYLES[stage.id] || 'bg-surface-card text-text-primary'} shadow-neu-sm cursor-pointer hover:-translate-x-px hover:-translate-y-px hover:shadow-neu active:translate-x-px active:translate-y-px active:shadow-none`
                   }`}
                 >
-                  <span className="flex items-center gap-1 font-heading text-[10px] uppercase leading-none tracking-tight">
-                    <span
-                      aria-hidden="true"
-                      className="inline-block h-2 w-2 shrink-0 rounded-full border border-text-primary"
-                      style={{ backgroundColor: COL_ACCENTS[stage.id] || '#171717' }}
-                    />
-                    <span className="truncate">{stage.label}</span>
+                  <span className="w-full truncate text-center font-heading text-[10px] uppercase leading-none tracking-tight">
+                    {stage.label}
                   </span>
                   <span className="font-mono text-[9px] font-bold leading-none opacity-85">
-                    {isCurrent ? '● Current' : 'Tap to move'}
+                    {isCurrent ? 'Current' : 'Tap to move'}
                   </span>
                 </button>
               );

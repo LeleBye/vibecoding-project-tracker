@@ -12,13 +12,6 @@ const STAGE_TAB_ACTIVE = {
   done: 'bg-brand-accent text-text-primary',
 };
 
-const STAGE_TAB_SWATCH = {
-  todo: 'bg-text-primary',
-  'in-progress': 'bg-brand-primary',
-  review: 'bg-due-warning',
-  done: 'bg-brand-accent',
-};
-
 const SWIPE_MIN_DISTANCE = 35;
 
 /**
@@ -176,10 +169,7 @@ export default function KanbanBoard({
                     : 'bg-surface-card text-text-primary shadow-neu-sm active:translate-x-[2px] active:translate-y-[2px] active:shadow-none'
                 }`}
               >
-                <span className="flex items-center gap-1 font-heading text-[10px] uppercase leading-tight tracking-[0.3px] text-center">
-                  {!isActive && (
-                    <span aria-hidden="true" className={`h-2 w-2 shrink-0 border-[1.5px] border-text-primary ${STAGE_TAB_SWATCH[stage.id]}`} />
-                  )}
+                <span className="w-full text-center font-heading text-[10px] uppercase leading-tight tracking-[0.3px] truncate">
                   {stage.label}
                 </span>
                 <span
